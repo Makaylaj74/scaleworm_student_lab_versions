@@ -1,0 +1,11 @@
+path: /home/jovyan/scaleworm-student-lab/notebooks/verification_session/corrected_dataset
+train: images/train
+val: images/train
+
+nc: 1
+names:
+  0: scale_worm
+
+# Source: corrected Ultralytics Hub annotations
+# NDJSON: round_2.ndjson
+# Images: 1156  |  Boxes: 4823

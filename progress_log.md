@@ -46,6 +46,31 @@ Auto-pushed to `origin/main` (https://github.com/Makaylaj74/scaleworm-makayla) a
 
 ---
 
+## Notebooks Built (2026-06-28)
+
+### `23_pick_timestamp.ipynb`
+Interactive tool for picking a reference video timestamp for population counting.
+- Cell 1: pre-extracts frames every 5s from a reference video into `timestamp_cache/`
+- Cell 2: interactive slider to scrub through the video
+- Cell 3 (new): **scene verification** — shows 4 random training frames alongside the chosen timestamp frame for visual confirmation the scenes match
+
+**Finding:** Training data contains frames from multiple camera angles (different time slots show different views of the vent). The T061500-style videos show a closer front-on view; T091500-style shows a wider horizontal profile. Both are in the training set and the model handles both.
+
+**Reference timestamp chosen:** t = 190 s in `CAMHDA301-20241001T091500.mp4`
+
+---
+
+### `24_count_timeseries.ipynb`
+Population count time series using a **scan window approach** (185–325 s, every 5 s per video).
+- Uses max YOLO detection count across the window to handle variable zoom timing and multi-angle training data
+- Results cached per video in `timeseries_results/` — run is **resumable** after kernel restarts
+- Plots interactive Plotly time series; 0-detection videos (camera not zoomed in) are omitted
+- Model path is a config variable — re-run Cells 3–4 with a new model path to compare rounds
+
+**Status:** Built; not yet run. Run after round 2 retraining is complete to compare v1 vs v2.
+
+---
+
 ## Round 2 — In progress 🔄
 
 **Started:** 2026-06-28  

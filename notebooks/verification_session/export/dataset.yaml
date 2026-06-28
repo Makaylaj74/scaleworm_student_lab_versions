@@ -1,0 +1,13 @@
+path: .
+train: images/train
+val: images/train
+
+nc: 1
+names:
+  0: scale_worm
+
+# Verified detections: 3610
+# Source frames: 1153
+# Date range: 2024-10-01 to 2024-10-31
+# Confidence threshold: 0.1
+# Frame size: 1920x1080
