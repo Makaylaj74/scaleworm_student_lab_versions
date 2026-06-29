@@ -1,7 +1,7 @@
 # Scaleworm Notebook — Project Member Instructions
 
 Notebook: `22_verify_detections.ipynb`
-Last updated: 2026-06-28
+Last updated: 2026-06-29
 
 ---
 
@@ -86,6 +86,12 @@ The detector runs at a low confidence threshold (0.1) to catch as many candidate
 as possible — expect many false positives, which you will sort in the next step.
 On CPU this takes 30–60 minutes for a full month.
 
+> **Resume shortcut (new as of 2026-06-29):** The detector cell now checks whether
+> a video has already been processed and skips it automatically. If your session
+> died mid-detection, you do **not** need to start over — re-run **Section 1
+> (Setup)** and then **Section 4 (detector cell)** only. Already-counted videos
+> are skipped and the run picks up from where it stopped.
+
 After the detector finishes, run the save cell immediately (the one that prints
 "Saved N detections"). Do not skip this.
 
@@ -115,6 +121,10 @@ Click one of three buttons:
 Your progress is saved after every click. You can close the notebook and resume
 later — re-run Sections 1–5 (they will skip already-completed work) and the widget
 will pick up where you left off.
+
+> **If the buttons disappear or the widget stops responding:** Refresh the page,
+> then re-run the Section 6 cell. The button widgets will reappear and your saved
+> progress will be restored automatically.
 
 **Step 7 — Run Section 7 (Summary)**
 
@@ -153,3 +163,13 @@ training log and note the path to the new `best.pt` weights file.
 - If you see a CUDA warning about the NVIDIA driver, ignore it. The notebook
   runs on CPU and produces correct results, just more slowly.
 - Questions? Contact the project lead before modifying any configuration constants.
+
+---
+
+## Troubleshooting
+
+| Problem | Fix |
+|---------|-----|
+| A cell throws an unexpected error or hangs | Restart the kernel (**Kernel → Restart Kernel** in JupyterLab), then re-run from Section 1 downward. Completed steps will be skipped. |
+| Button widgets in the verify-detections cell disappeared or are unresponsive | Refresh the browser page, then re-run the Section 6 cell. Your saved labels will be restored and the buttons will reappear. |
+| Detection run was interrupted mid-way through | Re-run **Section 1 (Setup)** and then **Section 4 (detector cell)**. The detector now skips videos that were already processed, so it will pick up where it left off without re-counting completed videos. |
