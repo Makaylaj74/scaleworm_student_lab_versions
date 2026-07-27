@@ -75,17 +75,27 @@ def counts(session_dir: Path) -> dict[str, int]:
     }
 
 
-def _append_log(log_csv: Path, stem: str, decision: str, when: str) -> None:
+#: Column order of the append-only decision log.
+LOG_HEADER: tuple[str, ...] = ("stem", "decision", "scene1_time_s", "decided_at_utc")
+
+
+def _append_log(
+    log_csv: Path, stem: str, decision: str, scene1_time_s: str, when: str
+) -> None:
     new_file = not log_csv.exists()
     with log_csv.open("a", newline="") as fh:
         writer = csv.writer(fh)
         if new_file:
-            writer.writerow(["stem", "decision", "decided_at_utc"])
-        writer.writerow([stem, decision, when])
+            writer.writerow(LOG_HEADER)
+        writer.writerow([stem, decision, scene1_time_s, when])
 
 
 def apply_decision(
-    session_dir: Path, sheet_path: Path, decision: str, when: str | None = None
+    session_dir: Path,
+    sheet_path: Path,
+    decision: str,
+    when: str | None = None,
+    scene1_time_s: float | None = None,
 ) -> Path | None:
     """Record a sort decision, moving the sheet for terminal decisions.
 
@@ -94,19 +104,33 @@ def apply_decision(
     For ``skip`` the sheet is left in place and None is returned. Every decision
     is appended to ``sort_log.csv``.
 
+    Args:
+        scene1_time_s: Clip-elapsed time (seconds) where the Scene 1 view appears,
+            read from the contact-sheet tile label (``t=...s``). Only meaningful for
+            a ``scene1`` decision; it is the locator the detection step uses to find
+            the frame. Omit if unknown (logged blank).
+
     Raises:
-        ValueError: if ``decision`` is not one of :data:`DECISIONS`.
+        ValueError: if ``decision`` is not one of :data:`DECISIONS`, if
+            ``scene1_time_s`` is given for a non-``scene1`` decision, or if it is
+            negative.
         FileNotFoundError: if ``sheet_path`` does not exist.
     """
     if decision not in DECISIONS:
         raise ValueError(f"decision must be one of {DECISIONS}, got {decision!r}")
+    if scene1_time_s is not None:
+        if decision != "scene1":
+            raise ValueError("scene1_time_s is only valid for a 'scene1' decision")
+        if scene1_time_s < 0:
+            raise ValueError(f"scene1_time_s must be >= 0, got {scene1_time_s}")
     sheet_path = Path(sheet_path)
     if not sheet_path.is_file():
         raise FileNotFoundError(sheet_path)
 
     paths = session_paths(session_dir)
     stamp = when or datetime.now(UTC).isoformat(timespec="seconds")
-    _append_log(paths.log_csv, sheet_path.stem, decision, stamp)
+    time_str = "" if scene1_time_s is None else f"{scene1_time_s:g}"
+    _append_log(paths.log_csv, sheet_path.stem, decision, time_str, stamp)
 
     if decision == "skip":
         return None

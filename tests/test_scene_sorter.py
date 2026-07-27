@@ -57,9 +57,9 @@ class TestApplyDecision:
         sorter.apply_decision(s, s / "contact_sheets" / "a.png", "scene1")
         sorter.apply_decision(s, s / "contact_sheets" / "b.png", "skip")
         rows = (s / "sort_log.csv").read_text().splitlines()
-        assert rows[0] == "stem,decision,decided_at_utc"
-        assert rows[1].startswith("a,scene1,")
-        assert rows[2].startswith("b,skip,")
+        assert rows[0] == "stem,decision,scene1_time_s,decided_at_utc"
+        assert rows[1].startswith("a,scene1,,")  # no time given -> blank column
+        assert rows[2].startswith("b,skip,,")
 
     def test_overwrites_existing_destination(self, tmp_path):
         s = _make_session(tmp_path, ["dup"])
@@ -89,6 +89,28 @@ class TestApplyDecision:
             when="2026-07-27T12:00:00+00:00",
         )
         assert "2026-07-27T12:00:00+00:00" in (s / "sort_log.csv").read_text()
+
+    def test_scene1_time_recorded_in_log(self, tmp_path):
+        s = _make_session(tmp_path, ["a"])
+        sorter.apply_decision(
+            s, s / "contact_sheets" / "a.png", "scene1", scene1_time_s=270
+        )
+        rows = (s / "sort_log.csv").read_text().splitlines()
+        assert rows[1].startswith("a,scene1,270,")
+
+    def test_scene1_time_on_non_scene1_raises(self, tmp_path):
+        s = _make_session(tmp_path, ["a"])
+        with pytest.raises(ValueError):
+            sorter.apply_decision(
+                s, s / "contact_sheets" / "a.png", "not_scene1", scene1_time_s=270
+            )
+
+    def test_negative_scene1_time_raises(self, tmp_path):
+        s = _make_session(tmp_path, ["a"])
+        with pytest.raises(ValueError):
+            sorter.apply_decision(
+                s, s / "contact_sheets" / "a.png", "scene1", scene1_time_s=-5
+            )
 
 
 class TestCounts:
