@@ -22,6 +22,36 @@ Budget ~30–60 min. You can stop and resume anytime; your progress is saved as 
    Drop it at `scene_sorting/irr_round_1/raters/<your_id>/` so the paths below line up.
 3. **The `scaleworm` Jupyter kernel** (has matplotlib) — select it in the notebook, top right.
 
+## Step 0 — set up your folder (you can paste this to Claude)
+
+The `raters/<your_id>/` folder and the 80 images are **not in git**, so they won't appear from a
+`git pull` — you have to place them yourself. If you'd rather not do it by hand, open Claude Code
+**in the repo root** and paste the prompt below, after filling in the two `<...>` blanks
+(`<YOUR_ID>` = the ID Makayla gave you; `<PATH_TO_YOUR_ZIP>` = wherever the zip Makayla sent you
+landed, e.g. `~/Downloads/rater_b.zip`):
+
+```
+I'm a rater in a scale-worm "Scene 1" sorting exercise, working in this repo. My rater ID is
+<YOUR_ID>. Please set up my folder without looking at any image contents or touching anyone
+else's rater folder:
+
+1. Make sure scripts/scene_sorter.py and notebooks/25_sort_scenes_clean_for_raters.ipynb exist.
+   If either is missing, stop and tell me (I may need to `git pull` or be handed a file).
+2. Create scene_sorting/irr_round_1/raters/ if it doesn't exist, then unzip <PATH_TO_YOUR_ZIP>
+   so the images end up at exactly:
+       scene_sorting/irr_round_1/raters/<YOUR_ID>/contact_sheets/*.png
+   The zip's top-level folder is already named <YOUR_ID>, so extract it INTO
+   scene_sorting/irr_round_1/raters/ — do NOT create a doubled path like
+   raters/<YOUR_ID>/<YOUR_ID>/contact_sheets.
+3. Verify the count: report how many .png files are in
+   scene_sorting/irr_round_1/raters/<YOUR_ID>/contact_sheets/. It must be exactly 80.
+4. Do not create, move, or edit any sort_log.csv, scene1/, or not_scene1/ folder — the notebook
+   makes those on first run. Just report what you did and the final PNG count.
+```
+
+If it reports anything other than **80** contact sheets, stop and check with Makayla before
+labeling — a wrong count means the wrong or partial folder.
+
 ## Step 1 — read the rubric (required)
 
 Open **`scene_sorting/scene1_rubric.md`** and read it fully. It defines exactly what counts as
@@ -32,26 +62,22 @@ the comparison.
 
 ## Step 2 — point the notebook at YOUR folder
 
-Open `notebooks/25_sort_scenes.ipynb`. In the **config cell** (the first code cell), change the
-`SESSION_DIR` line to your rater folder:
+Open **`notebooks/25_sort_scenes_clean_for_raters.ipynb`** (this is the rater copy — it has no
+pre-filled decisions). In the **config cell** (the first code cell), change the one `RATER_ID`
+line to your ID:
 
 ```python
-SESSION_DIR = Path.cwd().parent / "scene_sorting" / "irr_round_1" / "raters" / "rater_a"
+RATER_ID = "rater_a"  # <-- CHANGE THIS to your assigned ID
 ```
 
-(replace `rater_a` with your ID). Run that cell — it should print `remaining: 80`. If it prints
-a different number or an error, stop and check with Makayla; do **not** proceed pointing at the
-wrong folder.
+Run that cell — it should print `remaining: 80`. If it prints a different number or an error,
+stop and check with Makayla; do **not** proceed pointing at the wrong folder.
 
-## Step 3 — ⚠️ clear the pre-filled decisions
+## Step 3 — nothing to clear (rater copy is already clean)
 
-The notebook ships with **Makayla's own sorting calls already filled into the cells** near the
-bottom (lots of `s1(...)` / `no()` lines). Those are *her* decisions — if you run them, you'll
-blindly stamp her answers onto your folder.
-
-**Before labeling, delete every code cell below the first driver cell**, leaving just one driver
-cell you'll reuse. (The first driver cell is the one with the `# DRIVER CELL` comment.) When in
-doubt, delete more — you only need one.
+This rater notebook ships with **no decisions in it** — just the config cell, the engine cell,
+and one empty driver cell. So there is nothing to delete: don't paste in anyone else's calls, and
+work only in the single driver cell (the one with the `# DRIVER CELL` comment).
 
 ## Step 4 — label the 80 sheets
 
