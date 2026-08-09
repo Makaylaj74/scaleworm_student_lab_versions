@@ -14,3 +14,11 @@ dependencies = [
     "pillow>=10.0",
     "ipykernel>=6.25",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    # statsmodels is used only by tests/test_irr_agreement.py to cross-check the
+    # Fleiss' kappa implementation against a reference; it pulls scipy transitively.
+    "statsmodels>=0.14",
+]
