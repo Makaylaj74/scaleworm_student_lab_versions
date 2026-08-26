@@ -33,3 +33,5 @@ literature/**/*.djvu
 
 # Derived single-frame counting results (regenerable from 24_count_timeseries.ipynb)
 notebooks/timeseries_results_singleframe/
+notebooks/model_comparison_frames/
+notebooks/model_comparison_results.csv
