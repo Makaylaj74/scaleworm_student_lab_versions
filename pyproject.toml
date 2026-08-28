@@ -13,4 +13,5 @@ dependencies = [
     "torchvision>=0.16",
     "pillow>=10.0",
     "ipykernel>=6.25",
+    "ultralytics>=8.4.131",
 ]
