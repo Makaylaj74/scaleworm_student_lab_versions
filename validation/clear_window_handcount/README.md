@@ -58,6 +58,14 @@ No sort exists for these, so instead of a frame you get a **contact sheet** in
 
 ## 5. How to count (do this consistently)
 
+**Recommended tool:** open **`notebooks/29_clickcount_clear_window.ipynb`** (kernel
+`joseph-scaleworm-thesis`). It shows each ready frame; you **left-click each worm**
+(right-click or Undo to remove), then **Save & Next** writes the count into
+`handcount_sheet.csv` and your exact click positions into `clicks/<frame_id>.json`.
+It opens on the first uncounted frame and saves after every frame, so you can stop
+and resume. You can also count by eye and type numbers into the CSV directly — either
+way, be consistent:
+
 - Count every distinct **scale worm** you can identify in the frame — same criteria
   the lab has used for the Jan-2023 / Feb-2024 / May-2024 hand counts, so numbers are
   comparable. If you and another rater will both count (recommended for inter-rater
