@@ -1,0 +1,8 @@
+# YOLO dataset config for the scaleworm v2 retrain (domain-adaptation of mushroom.pt).
+# train/val hold CORRECTED labels only. The 39-frame clear-window validation set is the
+# INDEPENDENT test (never placed here) — evaluate v2 on it via scripts/run_recall_gate.py.
+path: /home/jovyan/scaleworm-student-lab/datasets/scaleworm_v2
+train: images/train
+val: images/val
+names:
+  0: scale_worm
