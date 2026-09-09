@@ -35,3 +35,6 @@ literature/**/*.djvu
 notebooks/timeseries_results_singleframe/
 notebooks/model_comparison_frames/
 notebooks/model_comparison_results.csv
+
+# YOLO dataset label caches (regenerated each run)
+*.cache

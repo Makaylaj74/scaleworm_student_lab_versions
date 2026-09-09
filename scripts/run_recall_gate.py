@@ -14,6 +14,7 @@ Run under the thesis venv (ultralytics 8.4.62) for comparability with those numb
 from __future__ import annotations
 
 import csv
+import os
 import statistics
 import sys
 from pathlib import Path
@@ -22,13 +23,17 @@ from ultralytics import YOLO
 
 REPO = Path("/home/jovyan/scaleworm-student-lab")
 sys.path.insert(0, str(REPO / "scripts"))
-from count_frames import count_worms
+from count_frames import count_worms  # noqa: E402  (import needs sys.path insert above)
 
 VAL = REPO / "validation" / "clear_window_handcount"
 SHEET = VAL / "handcount_sheet.csv"
 FRAMES = VAL / "frames"
-MODEL = REPO / "mushroom.pt"
-OUT = VAL / "recall_gate_results.csv"
+# MODEL env override lets the same gate score a trained best.pt without editing:
+#   MODEL=99_runs/scaleworm_v2_smoke/weights/best.pt python scripts/run_recall_gate.py
+MODEL = Path(os.environ.get("MODEL", str(REPO / "mushroom.pt")))
+if not MODEL.is_absolute():
+    MODEL = REPO / MODEL
+OUT = Path(os.environ.get("OUT", str(VAL / "recall_gate_results.csv")))
 CONF = 0.25
 BOOT_N = 10_000
 SEED = 20260908

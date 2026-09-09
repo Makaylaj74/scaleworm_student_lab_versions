@@ -15,20 +15,26 @@ workstation) with the same dataset. Set DEVICE below.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from ultralytics import YOLO
 
 REPO = Path("/home/jovyan/scaleworm-student-lab")
 
-# --- config (tune when real GPU is available) ---
+# --- config (env-overridable so a CPU smoke test is reproducible without editing) ---
+# Full-GPU defaults; override for a CPU smoke test, e.g.:
+#   IMGSZ=640 EPOCHS=60 RUN_NAME=scaleworm_v2_smoke python scripts/train_v2.py
 BASE = REPO / "mushroom.pt"
 DATA = REPO / "datasets/scaleworm_v2/data.yaml"
-EPOCHS = 100
-IMGSZ = 1280  # worms are small; 1280 preserves detail (drop to 640 for a CPU smoke test)
-BATCH = 8
-DEVICE = "cpu"  # set to 0 on a machine with a supported GPU
-FREEZE = 10  # freeze backbone layers for stable fine-tuning; set 0 to train all
+EPOCHS = int(os.environ.get("EPOCHS", "100"))
+IMGSZ = int(os.environ.get("IMGSZ", "1280"))  # small worms; 1280 detail, 640 for CPU
+BATCH = int(os.environ.get("BATCH", "8"))
+DEVICE = os.environ.get("DEVICE", "cpu")  # set to "0" on a machine with a supported GPU
+FREEZE = int(os.environ.get("FREEZE", "10"))  # freeze backbone; 0 = train all layers
+WORKERS = int(os.environ.get("WORKERS", "8"))  # dataloader workers (lab cap: keep <=24)
+PATIENCE = int(os.environ.get("PATIENCE", "20"))
+RUN_NAME = os.environ.get("RUN_NAME", "scaleworm_v2")
 
 
 def main() -> None:
@@ -40,13 +46,14 @@ def main() -> None:
         batch=BATCH,
         device=DEVICE,
         freeze=FREEZE,
-        patience=20,
+        workers=WORKERS,
+        patience=PATIENCE,
         project=str(REPO / "99_runs"),
-        name="scaleworm_v2",
+        name=RUN_NAME,
         seed=20260908,
         exist_ok=True,
     )
-    print("done -> weights under 99_runs/scaleworm_v2/weights/best.pt")
+    print(f"done -> weights under 99_runs/{RUN_NAME}/weights/best.pt")
     print("validate: edit MODEL in run_recall_gate.py to that best.pt and re-run the gate")
 
 
