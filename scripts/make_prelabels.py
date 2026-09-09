@@ -17,6 +17,7 @@ image+label into datasets/scaleworm_v2/images|labels/{train,val}.
 from __future__ import annotations
 
 import csv
+import os
 import sys
 from pathlib import Path
 
@@ -27,6 +28,10 @@ sys.path.insert(0, str(REPO / "scripts"))
 from count_frames import extract_frame  # noqa: E402  (import needs sys.path insert above)
 
 CONF = 0.25
+# Which model proposes the pre-boxes. Default mushroom.pt (the original clear-window
+# workflow). For blurry post-2023 frames, set MODEL to the v2 best.pt — it recovers
+# ~12-14% vs mushroom's ~5% there, so it seeds more real boxes and less manual adding.
+MODEL_PATH = os.environ.get("MODEL", str(REPO / "mushroom.pt"))
 
 
 def main() -> None:
@@ -45,7 +50,8 @@ def main() -> None:
         print("pick Scene-1 times first (nb 32 for -2021 train), then re-run.")
         return
 
-    model = YOLO(str(REPO / "mushroom.pt"))
+    model = YOLO(MODEL_PATH)
+    print(f"pre-label model: {MODEL_PATH}")
     n_box = 0
     for r in rows:
         stem = r.get("stem") or r["frame_id"]  # clean manifest or a pick_sheet
@@ -53,11 +59,20 @@ def main() -> None:
         if not png.exists():
             extract_frame(Path(r["video_path"]), float(r["scene1_time_s"]), png)
         res = model(str(png), conf=CONF, verbose=False)[0]
-        lines = [f"0 {x:.6f} {y:.6f} {w:.6f} {h:.6f}" for x, y, w, h in res.boxes.xywhn.tolist()]
-        (out / "labels" / f"{stem}.txt").write_text("\n".join(lines) + ("\n" if lines else ""))
+        lines = [
+            f"0 {x:.6f} {y:.6f} {w:.6f} {h:.6f}"
+            for x, y, w, h in res.boxes.xywhn.tolist()
+        ]
+        (out / "labels" / f"{stem}.txt").write_text(
+            "\n".join(lines) + ("\n" if lines else "")
+        )
         n_box += len(lines)
-    print(f"{len(rows)} frames -> {out}  ({n_box} pre-boxes, mean {n_box / len(rows):.1f}/frame)")
-    print("NEXT: correct in a labelling tool (add missed worms), then move to images|labels/{train,val}")
+    print(
+        f"{len(rows)} frames -> {out}  ({n_box} pre-boxes, mean {n_box / len(rows):.1f}/frame)"
+    )
+    print(
+        "NEXT: correct in a labelling tool (add missed worms), then move to images|labels/{train,val}"
+    )
 
 
 if __name__ == "__main__":
