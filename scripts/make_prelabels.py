@@ -24,7 +24,7 @@ from ultralytics import YOLO
 
 REPO = Path("/home/jovyan/scaleworm-student-lab")
 sys.path.insert(0, str(REPO / "scripts"))
-from count_frames import extract_frame
+from count_frames import extract_frame  # noqa: E402  (import needs sys.path insert above)
 
 CONF = 0.25
 
@@ -35,12 +35,17 @@ def main() -> None:
     (out / "images").mkdir(parents=True, exist_ok=True)
     (out / "labels").mkdir(parents=True, exist_ok=True)
 
-    model = YOLO(str(REPO / "mushroom.pt"))
     rows = [
         r
         for r in csv.DictReader(manifest.open())
         if (r.get("scene1_time_s") or "").strip()  # skip un-picked rows
     ]
+    if not rows:
+        print(f"no picked rows in {manifest} — scene1_time_s all blank.")
+        print("pick Scene-1 times first (nb 32 for -2021 train), then re-run.")
+        return
+
+    model = YOLO(str(REPO / "mushroom.pt"))
     n_box = 0
     for r in rows:
         stem = r.get("stem") or r["frame_id"]  # clean manifest or a pick_sheet
