@@ -38,3 +38,6 @@ notebooks/model_comparison_results.csv
 
 # YOLO dataset label caches (regenerated each run)
 *.cache
+
+# runtime-resolved dataset config (train_v2.py)
+data_resolved.yaml

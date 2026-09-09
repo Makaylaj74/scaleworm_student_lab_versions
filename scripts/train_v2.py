@@ -18,15 +18,18 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import yaml
 from ultralytics import YOLO
 
-REPO = Path("/home/jovyan/scaleworm-student-lab")
+# Resolve repo root from this file so the script runs on any machine (e.g. a GPU box),
+# not just the Hub. Override BASE/DATA via env if the layout differs.
+REPO = Path(__file__).resolve().parents[1]
 
 # --- config (env-overridable so a CPU smoke test is reproducible without editing) ---
 # Full-GPU defaults; override for a CPU smoke test, e.g.:
 #   IMGSZ=640 EPOCHS=60 RUN_NAME=scaleworm_v2_smoke python scripts/train_v2.py
-BASE = REPO / "mushroom.pt"
-DATA = REPO / "datasets/scaleworm_v2/data.yaml"
+BASE = Path(os.environ.get("BASE", str(REPO / "mushroom.pt")))
+DATA = Path(os.environ.get("DATA", str(REPO / "datasets/scaleworm_v2/data.yaml")))
 EPOCHS = int(os.environ.get("EPOCHS", "100"))
 IMGSZ = int(os.environ.get("IMGSZ", "1280"))  # small worms; 1280 detail, 640 for CPU
 BATCH = int(os.environ.get("BATCH", "8"))
@@ -37,10 +40,23 @@ PATIENCE = int(os.environ.get("PATIENCE", "20"))
 RUN_NAME = os.environ.get("RUN_NAME", "scaleworm_v2")
 
 
+def _resolved_data() -> str:
+    """Write a copy of data.yaml with `path` pinned to this machine's dataset dir.
+
+    Lets the same committed data.yaml train on any host (Hub or a GPU box) without
+    hand-editing the absolute `path`. Output is gitignored (data_resolved.yaml).
+    """
+    cfg = yaml.safe_load(DATA.read_text())
+    cfg["path"] = str(DATA.parent)
+    out = DATA.parent / "data_resolved.yaml"
+    out.write_text(yaml.safe_dump(cfg, sort_keys=False))
+    return str(out)
+
+
 def main() -> None:
     model = YOLO(str(BASE))
     model.train(
-        data=str(DATA),
+        data=_resolved_data(),
         epochs=EPOCHS,
         imgsz=IMGSZ,
         batch=BATCH,
@@ -54,7 +70,9 @@ def main() -> None:
         exist_ok=True,
     )
     print(f"done -> weights under 99_runs/{RUN_NAME}/weights/best.pt")
-    print("validate: edit MODEL in run_recall_gate.py to that best.pt and re-run the gate")
+    print(
+        "validate: edit MODEL in run_recall_gate.py to that best.pt and re-run the gate"
+    )
 
 
 if __name__ == "__main__":
