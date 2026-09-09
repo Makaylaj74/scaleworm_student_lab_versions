@@ -38,6 +38,15 @@ FREEZE = int(os.environ.get("FREEZE", "10"))  # freeze backbone; 0 = train all l
 WORKERS = int(os.environ.get("WORKERS", "8"))  # dataloader workers (lab cap: keep <=24)
 PATIENCE = int(os.environ.get("PATIENCE", "20"))
 RUN_NAME = os.environ.get("RUN_NAME", "scaleworm_v2")
+# Initial learning rate. Unset = ultralytics default (0.01). Set LOW (e.g. 0.001) for a
+# gentle warm-start fine-tune from an already-good model (e.g. BASE=v2) so the new domain
+# is learned without forgetting the old one. NOTE: ultralytics IGNORES lr0 under the
+# default optimizer=auto, so when LR0 is set we pin an explicit optimizer (OPTIMIZER, or
+# SGD) so the requested lr0 actually takes effect.
+LR0 = os.environ.get("LR0")
+OPTIMIZER = os.environ.get(
+    "OPTIMIZER"
+)  # e.g. "SGD"/"AdamW"; default auto unless LR0 set
 
 
 def _resolved_data() -> str:
@@ -55,7 +64,7 @@ def _resolved_data() -> str:
 
 def main() -> None:
     model = YOLO(str(BASE))
-    model.train(
+    train_kwargs = dict(
         data=_resolved_data(),
         epochs=EPOCHS,
         imgsz=IMGSZ,
@@ -69,6 +78,16 @@ def main() -> None:
         seed=20260908,
         exist_ok=True,
     )
+    if LR0 is not None:
+        train_kwargs["lr0"] = float(LR0)
+        train_kwargs["optimizer"] = OPTIMIZER or "SGD"  # auto ignores lr0
+    elif OPTIMIZER:
+        train_kwargs["optimizer"] = OPTIMIZER
+    print(
+        f"BASE={BASE.name}  LR0={LR0 or 'default'}  "
+        f"OPTIMIZER={train_kwargs.get('optimizer', 'auto')}  FREEZE={FREEZE}  RUN_NAME={RUN_NAME}"
+    )
+    model.train(**train_kwargs)
     print(f"done -> weights under 99_runs/{RUN_NAME}/weights/best.pt")
     print(
         "validate: edit MODEL in run_recall_gate.py to that best.pt and re-run the gate"
