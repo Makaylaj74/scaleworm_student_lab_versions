@@ -1,0 +1,14 @@
+# Time Series Figure Scorecard
+
+Compliance tracking per the lab timeseries rubric (`~/.claude/skills/timeseries-figure/SKILL.md`).
+**P** = Pass, **F** = Fail, **–** = Not applicable.
+
+| Figure | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8a | 8b | 8c | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | Notes |
+|--------|---|---|---|---|---|---|---|----|----|----|---|----|----|----|----|----|----|----|----|----|----|-------|
+| figure_manual_worms_over_time.png | P | – | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | P | – | P | Paper tier, 300 DPI. Manual Monday Scene-1 series, mean±SEM over ≤8 slots. Line breaks across >14d gaps. Blur-onset (~Aug 2023) marked as context. |
+
+## Event-annotation convention (this project)
+
+Record here until a project constitution exists:
+
+- **Orange/vermillion dashed vertical line** = camera image-quality boundary (e.g. ~Aug-2023 blur onset).

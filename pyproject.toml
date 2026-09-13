@@ -15,3 +15,8 @@ dependencies = [
     "ipykernel>=6.25",
     "ultralytics>=8.4.131",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.7",
+]
