@@ -14,9 +14,18 @@ dependencies = [
     "pillow>=10.0",
     "ipykernel>=6.25",
     "ultralytics>=8.4.131",
+    "xarray>=2026.7.0",
+    "netcdf4>=1.7.4",
+    "plotly>=7.0.0",
 ]
 
 [dependency-groups]
 dev = [
     "ruff>=0.16.7",
+    "pytest>=8.0",
 ]
+
+[tool.pytest.ini_options]
+# scripts import each other by bare module name (e.g. `from eval_val_recall import ...`)
+# and tests use `from scripts.X import ...`, so both dirs must be importable.
+pythonpath = ["scripts", "."]

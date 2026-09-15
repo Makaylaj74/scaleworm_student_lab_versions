@@ -41,3 +41,9 @@ notebooks/model_comparison_results.csv
 
 # runtime-resolved dataset config (train_v2.py)
 data_resolved.yaml
+
+# Large external catalog — regenerable via the URL/md5 in its PROVENANCE.md
+external_data/**/*.dat
+
+# Generated interactive figures (regenerable from the plot_*.py scripts)
+notebooks/figure_*.html
