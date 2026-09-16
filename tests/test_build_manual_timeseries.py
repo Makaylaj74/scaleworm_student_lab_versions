@@ -3,7 +3,7 @@
 import math
 from datetime import date
 
-from scripts.build_manual_timeseries import aggregate_by_monday
+from scripts.build_manual_timeseries import _parse_count, aggregate_by_monday
 
 
 def test_groups_by_day_and_sorts():
@@ -44,3 +44,10 @@ def test_single_slot_has_blank_spread_not_zero():
 
 def test_empty_input():
     assert aggregate_by_monday([]) == []
+
+
+def test_parse_count_handles_int_and_float_strings():
+    # nb33 writes "8"; the 2023-2024 pipeline wrote "31.0" -> both are whole worms.
+    assert _parse_count("8") == 8
+    assert _parse_count("31.0") == 31
+    assert isinstance(_parse_count("31.0"), int)

@@ -68,6 +68,16 @@ def aggregate_by_monday(
     return out
 
 
+def _parse_count(value: str) -> int:
+    """Parse a ``worm_count`` cell to an int.
+
+    The manifest carries mixed string formats: nb 33's labeler writes plain ints
+    (``"8"``), while the earlier 2023-2024 pipeline wrote float strings (``"31.0"``).
+    All values are whole numbers, so ``int(float(...))`` normalises both without loss.
+    """
+    return int(float(value))
+
+
 def _load_counted(manifest: Path) -> list[tuple[date, int]]:
     recs = []
     with manifest.open(newline="") as fh:
@@ -75,7 +85,7 @@ def _load_counted(manifest: Path) -> list[tuple[date, int]]:
             if r["frame_status"] != "counted":
                 continue
             d = datetime.fromisoformat(r["datetime_utc"]).date()
-            recs.append((d, int(r["worm_count"])))
+            recs.append((d, _parse_count(r["worm_count"])))
     return recs
 
 
