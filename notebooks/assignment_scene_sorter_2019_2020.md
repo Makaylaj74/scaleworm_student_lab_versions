@@ -45,12 +45,27 @@ Why this matters downstream: 2019–2020 will be **counted by the AI detector**,
 
 ## Deliverable table (fill as you go)
 
-| Month (2019–2020) | Camera status | Clear Scene-1 count | Include in series? | Notes (swap? blur? outage?) |
-|---|---|---|---|---|
-| 2019-01 | | | | |
-| 2019-02 | | | | |
-| … | | | | |
-| 2020-12 | | | | |
+Pre-filled with the **video actually on disk** (Monday × 8-slot targets present) as of the
+2026-09-16 contact-sheet build. **There is a large mid-period gap (2019-08 → 2020-07) with no
+footage on disk** — treat those months as *camera-off / not-downloaded* until Maureen's timeline
+(or the OOI deployment records) confirms which; do **not** score them as "sorter found nothing."
+Fill the "Clear Scene-1 count" column as you sort.
+
+| Month (2019–2020) | Recordings on disk | Camera status | Clear Scene-1 count | Include in series? | Notes (swap? blur? outage?) |
+|---|---|---|---|---|---|
+| 2019-01 | 29 | recording | | | |
+| 2019-02 | 32 | recording | | | |
+| 2019-03 | 32 | recording | | | |
+| 2019-04 | 12 | partial | | | fewer slots present |
+| 2019-05 | 32 | recording | | | |
+| 2019-06 | 32 | recording | | | |
+| 2019-07 | 31 | recording | | | |
+| 2019-08 → 2020-07 | 0 | **no footage on disk** | — | no | gap — confirm outage vs not-downloaded |
+| 2020-08 | 16 | partial | | | Aug camera swap — look for a clarity change |
+| 2020-09 | 31 | recording | | | |
+| 2020-10 | 32 | recording | | | |
+| 2020-11 | 40 | recording | | | 5 Mondays |
+| 2020-12 | 32 | recording | | | |
 
 ## Working conventions
 
