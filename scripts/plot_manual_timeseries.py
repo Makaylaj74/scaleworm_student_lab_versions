@@ -1,4 +1,4 @@
-"""Manual scale-worm abundance timeseries (weekly Monday Scene-1 series, 2023-2024).
+"""Manual scale-worm abundance timeseries (weekly Monday Scene-1 series, 2021-2024).
 
 Reads ``monday_manual_timeseries.csv`` (per-Monday mean +/- SEM, from
 ``build_manual_timeseries.py``) and renders a Paper-tier figure (matplotlib, 300 DPI,
@@ -33,11 +33,11 @@ BLUR_ONSET = date(2023, 8, 10)
 CAPTION = (
     "AI-generated caption (Claude, Anthropic) — Manual scale-worm (Polynoidae) abundance at the "
     "Mushroom vent, Axial Seamount, from OOI Cabled Array HD video (instrument CAMHDA301, "
-    "RS03ASHS-PN03B-06), 2023-2024. Each point is the mean worm count across that Monday's "
+    "RS03ASHS-PN03B-06), 2021-2024. Each point is the mean worm count across that Monday's "
     "front-on Scene-1 recordings (up to eight three-hourly slots); error bars are +/- 1 SEM over "
     "the counted slots (absent where only one slot was usable). Counts are derived from human "
     "box-corrected annotations (annotator MJ; worm_count = number of boxes), seeded by the v2 "
-    "(clear) / v3 (blurry) detectors and corrected in both directions; 367 Scene-1 frames over 67 "
+    "(clear) / v3 (blurry) detectors and corrected in both directions; 714 Scene-1 frames over 128 "
     "Mondays. Non-front-on and unusable-blur slots are excluded as missing data, not zeros, so the "
     "connecting line breaks across gaps > 14 days. The dashed line marks the ~Aug-2023 onset of "
     "persistent camera blur; abundance does not collapse across it, confirming the post-Sep-2023 "
@@ -141,7 +141,7 @@ def main() -> None:
     ax.set_ylabel("Scale-worm count per Scene-1 frame", fontweight="bold", fontsize=12)
     ax.set_xlabel("Date", fontweight="bold", fontsize=12)
     ax.set_title(
-        "Manual scale-worm abundance — Mushroom vent, Axial Seamount, 2023-2024\n"
+        "Manual scale-worm abundance — Mushroom vent, Axial Seamount, 2021-2024\n"
         "(hand-corrected Scene-1 counts; weekly Monday sampling, mean +/- SEM)",
         fontsize=13,
     )
