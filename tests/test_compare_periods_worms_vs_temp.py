@@ -3,14 +3,37 @@
 import numpy as np
 import pandas as pd
 
+from scripts import compare_periods_worms_vs_temp as cp
 from scripts.compare_periods_worms_vs_temp import (
     cluster_bootstrap_mean,
+    load_ai2019,
     period_stats,
 )
 
 
 def _df(rows):
     return pd.DataFrame(rows, columns=["total_worms", "n_slots"])
+
+
+def test_load_ai2019_empty_when_absent(tmp_path, monkeypatch):
+    # missing AI-corrected file -> empty frame (overlay simply not drawn), no crash
+    monkeypatch.setattr(cp, "AI2019", tmp_path / "does_not_exist.csv")
+    out = load_ai2019()
+    assert out.empty
+    assert "mean_corrected" in out.columns
+
+
+def test_load_ai2019_parses_and_sorts(tmp_path, monkeypatch):
+    csv = tmp_path / "ai.csv"
+    csv.write_text(
+        "date,n_slots,mean_corrected,sem_corrected\n"
+        "2019-02-04,5,26.8,3.1\n"
+        "2019-01-07,5,37.1,4.4\n"
+    )
+    monkeypatch.setattr(cp, "AI2019", csv)
+    out = load_ai2019()
+    assert list(out["date"].dt.strftime("%Y-%m-%d")) == ["2019-01-07", "2019-02-04"]
+    assert out["sem"].tolist() == [4.4, 3.1]
 
 
 def test_period_stats_frame_weighted_mean():

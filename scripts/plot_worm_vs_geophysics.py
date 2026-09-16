@@ -22,7 +22,13 @@ from pathlib import Path
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import pandas as pd
-from compare_periods_worms_vs_temp import BLUR_ONSET, XLIM, load_worms, plot_worm_panel
+from compare_periods_worms_vs_temp import (
+    BLUR_ONSET,
+    XLIM,
+    load_ai2019,
+    load_worms,
+    plot_worm_panel,
+)
 
 NB = Path(__file__).resolve().parent.parent / "notebooks"
 MC_TXT = NB / "axial_seismicity_weekly_2017_2024.mc.txt"
@@ -47,12 +53,16 @@ def _finish(fig, ax_bottom, fname: str, cap: str) -> None:
     plt.setp(ax_bottom.get_xticklabels(), rotation=45, ha="right")
     ax_bottom.set_xlabel("week (weekly Monday sampling)")
     full = (
-        "AI-generated caption (Claude, Anthropic) — for review. Top: manual box-corrected "
-        "scale-worm (Polynoidae) counts at the Mushroom vent, Axial Seamount (OOI CAMHDA301); "
-        "Monday mean ± SEM over ≤8 front-on Scene-1 slots, 128 Mondays 2021-09..2024-12, 714 "
-        "frames. Dashed line = ~2023-08-10 camera-blur onset; post-onset worm counts are LOWER "
-        "BOUNDS (reduced countability), so the apparent worm decline while the geophysics ramps "
-        "is confounded and NO worm–geophysics correlation is asserted. " + cap
+        "AI-generated caption (Claude, Anthropic) — for review. Top: scale-worm (Polynoidae) "
+        "abundance at the Mushroom vent, Axial Seamount (OOI CAMHDA301). SOLID blue = 2021-2024 "
+        "manual box-counts (Monday mean ± SEM over ≤8 front-on Scene-1 slots, 128 Mondays "
+        "2021-09..2024-12, 714 frames). OPEN orange (dashed) = 2019 AI-corrected index (v2 "
+        "×2.24, gate recall 44.7%, 20 Mondays/102 frames), lower-confidence (bracket ×2.02–2.51). "
+        "The 2019-07..2021-09 gap is empty by design (no footage / 2020 fails gate / spring-2021 "
+        "unsorted; no interpolation). Dashed vertical = ~2023-08-10 camera-blur onset; post-onset "
+        "manual counts are LOWER BOUNDS (reduced countability), so the apparent worm decline while "
+        "the geophysics ramps is confounded and NO worm–geophysics correlation is asserted. "
+        + cap
     )
     fig.text(
         0.01, 0.005, full, fontsize=6.4, color="#444", wrap=True, ha="left", va="bottom"
@@ -71,7 +81,7 @@ def main() -> None:
     # fig 1: seismicity
     seis = _geo("axial_seismicity_weekly_2017_2024.csv")
     fig, (ax_w, ax_s) = plt.subplots(2, 1, figsize=(11, 6.8), sharex=True)
-    plot_worm_panel(ax_w, w)
+    plot_worm_panel(ax_w, w, ai=load_ai2019())
     ax_s.plot(
         seis["week_start"],
         seis["eq_count_all"],
@@ -94,7 +104,9 @@ def main() -> None:
         loc="left",
     )
     ax_s.legend(fontsize=8, frameon=False, loc="upper left")
-    fig.suptitle("Scaleworm abundance vs Axial seismicity, 2021–2024", fontsize=12)
+    fig.suptitle(
+        "Scaleworm abundance vs Axial seismicity, 2019 (AI) + 2021–2024", fontsize=12
+    )
     _finish(
         fig,
         ax_s,
@@ -107,7 +119,7 @@ def main() -> None:
     # fig 2: inflation
     infl = _geo("axial_inflation_weekly_2017_2024.csv")
     fig, (ax_w, ax_i) = plt.subplots(2, 1, figsize=(11, 6.8), sharex=True)
-    plot_worm_panel(ax_w, w)
+    plot_worm_panel(ax_w, w, ai=load_ai2019())
     ax_i.plot(infl["week_start"], infl["uplift_cm"], color=GREEN, lw=1.6)
     ax_i.set_ylabel("caldera uplift (cm)\nsince 2017")
     ax_i.set_title(
@@ -116,7 +128,8 @@ def main() -> None:
         loc="left",
     )
     fig.suptitle(
-        "Scaleworm abundance vs caldera magma inflation, 2021–2024", fontsize=12
+        "Scaleworm abundance vs caldera magma inflation, 2019 (AI) + 2021–2024",
+        fontsize=12,
     )
     _finish(
         fig,

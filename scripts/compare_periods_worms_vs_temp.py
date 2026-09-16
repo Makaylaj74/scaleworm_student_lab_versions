@@ -35,6 +35,7 @@ import pandas as pd
 REPO = Path(__file__).resolve().parent.parent
 NB = REPO / "notebooks"
 WORM = REPO / "validation/monday_manual_series/monday_manual_timeseries.csv"
+AI2019 = NB / "worm_timeseries_gate_corrected.csv"
 THERM = NB / "ashes_thermistor_weekly_2017_2024.csv"
 
 BLUR_ONSET = pd.Timestamp("2023-08-10")  # documented camera-blur onset
@@ -84,37 +85,78 @@ def load_worms() -> pd.DataFrame:
     return w.sort_values("date").reset_index(drop=True)
 
 
-XLIM = (pd.Timestamp("2021-01-01"), pd.Timestamp("2025-01-01"))
+def load_ai2019() -> pd.DataFrame:
+    """Load the AI-corrected 2019 worm index (open-symbol overlay); empty if absent."""
+    if not AI2019.exists():
+        return pd.DataFrame(columns=["date", "mean_corrected", "sem"])
+    a = pd.read_csv(AI2019, parse_dates=["date"])
+    a["sem"] = pd.to_numeric(a["sem_corrected"], errors="coerce")
+    return a.sort_values("date").reset_index(drop=True)
 
 
-def plot_worm_panel(ax, w: pd.DataFrame, *, legend: bool = True) -> None:
-    """Draw the manual worm-abundance panel (shared by all worm-vs-geophysics figs).
+# x-window spans the AI-corrected 2019 index and the 2021-2024 manual series; the
+# Jul-2019..Sep-2021 gap (no footage / 2020 unit fails gate / spring-2021 unsorted)
+# is left empty on purpose (honest gap, no interpolation).
+XLIM = (pd.Timestamp("2019-01-01"), pd.Timestamp("2025-01-01"))
 
-    Solid Okabe-Ito blue, mean ± SEM, connecting line broken across >14-day sampling
-    gaps, with the camera-blur-onset marker and its 'counts→lower bound' note.
-    """
-    seg = w["date"].diff().dt.days.gt(14).cumsum()
+
+def _plot_gapped(ax, df, ycol, *, color, mfc, ls, label):
+    """Errorbar a Monday series with the connector broken across >14-day gaps."""
+    seg = df["date"].diff().dt.days.gt(14).cumsum()
     first = True
-    for _, s in w.groupby(seg):
+    for _, s in df.groupby(seg):
         ax.errorbar(
             s["date"],
-            s["mean_worms"],
+            s[ycol],
             yerr=s["sem"],
-            color=BLUE,
+            color=color,
             marker="o",
-            ms=3,
+            mfc=mfc,
+            ms=3.5,
             lw=1.0,
+            ls=ls,
             elinewidth=0.6,
             capsize=1.5,
-            label="Monday mean ± SEM (≤8 Scene-1 slots)" if first else None,
+            label=label if first else None,
         )
         first = False
+
+
+def plot_worm_panel(ax, w: pd.DataFrame, *, legend: bool = True, ai=None) -> None:
+    """Draw the worm-abundance panel (shared by all worm-vs-geophysics figs).
+
+    Manual box-counts (2021-2024) in solid Okabe-Ito blue, mean ± SEM, connector
+    broken across >14-day sampling gaps, with the camera-blur-onset marker. If
+    ``ai`` (the AI-corrected 2019 index) is supplied and non-empty, it is overlaid
+    with OPEN symbols + a dashed connector to flag it as a lower-confidence series.
+    """
+    if ai is not None and not ai.empty:
+        _plot_gapped(
+            ax,
+            ai,
+            "mean_corrected",
+            color=ORANGE,
+            mfc="none",
+            ls="--",
+            label="2019 AI-corrected (v2 ×2.24, open)",
+        )
+    _plot_gapped(
+        ax,
+        w.assign(mean_corrected=w["mean_worms"]),
+        "mean_corrected",
+        color=BLUE,
+        mfc=BLUE,
+        ls="-",
+        label="2021–2024 manual box-count (mean ± SEM)",
+    )
     ax.set_ylabel("scale-worms / frame\n(mean ± SEM)")
     ax.set_title(
-        "Manual scale-worm abundance — Mushroom vent, Axial Seamount (2021–2024)",
+        "Scale-worm abundance — Mushroom vent, Axial Seamount "
+        "(2019 AI-corrected + 2021–2024 manual)",
         fontsize=11,
         loc="left",
     )
+    ax.set_ylim(top=ax.get_ylim()[1] * 1.12)  # headroom for the tall 2019 point
     ax.axvline(BLUR_ONSET, color=BLACK, ls="--", lw=1.0, alpha=0.7)
     ax.text(
         BLUR_ONSET,
@@ -127,7 +169,14 @@ def plot_worm_panel(ax, w: pd.DataFrame, *, legend: bool = True) -> None:
     )
     ax.grid(alpha=0.25, lw=0.5)
     if legend:
-        ax.legend(fontsize=8, frameon=False, loc="upper right")
+        # place the legend in the empty 2019-07..2021-09 data gap (upper-centre-left)
+        ax.legend(
+            fontsize=8,
+            frameon=True,
+            framealpha=0.9,
+            loc="upper center",
+            bbox_to_anchor=(0.32, 1.0),
+        )
 
 
 def compare(w: pd.DataFrame) -> list[dict]:
@@ -149,7 +198,7 @@ def _plot(w: pd.DataFrame) -> None:
     therm = therm[therm["week_start"].between(*XLIM)]
 
     fig, (ax_w, ax_t) = plt.subplots(2, 1, figsize=(11, 6.8), sharex=True)
-    plot_worm_panel(ax_w, w)
+    plot_worm_panel(ax_w, w, ai=load_ai2019())
 
     # --- temperature ---
     ax_t.plot(
@@ -184,17 +233,20 @@ def _plot(w: pd.DataFrame) -> None:
     ax_t.set_xlabel("week (weekly Monday sampling)")
 
     cap = (
-        "AI-generated caption (Claude, Anthropic) — for review. Top: manual "
-        "box-corrected scale-worm (Polynoidae) counts at the Mushroom vent, Axial "
-        "Seamount, from OOI HD video (CAMHDA301); each point = mean over that Monday's "
-        "front-on Scene-1 slots (≤8), error bars ±1 SEM (absent when 1 slot). 128 "
-        "Mondays, 2021-09-06..2024-12-23, 714 frames. Bottom: OOI TMPSFA301 24-thermistor "
-        "diffuse-flow array, QARTOD-passed weekly mean; 'hottest thermistor' is a single "
-        "sensor (localized pulse), not a field-wide temperature. Dashed line = ~2023-08-10 "
-        "camera-blur onset; worm counts AFTER it are LOWER BOUNDS (reduced countability), "
-        "so a lower 2024 mean is not by itself a biological decline. No worm–temperature "
-        "correlation is asserted (worm sampling begins 2021-09, after the spring-2021 "
-        "temperature spike). Derived from version-controlled scripts + data."
+        "AI-generated caption (Claude, Anthropic) — for review. Top: scale-worm "
+        "(Polynoidae) abundance at the Mushroom vent, Axial Seamount, from OOI HD video "
+        "(CAMHDA301). SOLID blue = 2021-2024 manual box-counts (128 Mondays, "
+        "2021-09-06..2024-12-23, 714 frames), each point = mean over that Monday's front-on "
+        "Scene-1 slots (≤8), ±1 SEM. OPEN orange (dashed) = 2019 AI-corrected index (v2 "
+        "detector ×2.24 recall correction, gate recall 44.7%; 20 Mondays, 102 frames) — a "
+        "LOWER-CONFIDENCE series (correction bracket ×2.02–2.51). The 2019-07..2021-09 gap is "
+        "empty by design (no footage / 2020 camera fails the gate / spring-2021 unsorted; no "
+        "interpolation). Bottom: OOI TMPSFA301 24-thermistor diffuse-flow array, QARTOD-passed "
+        "weekly mean; 'hottest thermistor' is a single sensor (localized pulse), not field-wide. "
+        "Dashed vertical = ~2023-08-10 camera-blur onset; manual counts AFTER it are LOWER "
+        "BOUNDS (reduced countability), so a lower 2024 mean is not by itself a biological "
+        "decline. No worm–temperature correlation is asserted. Derived from version-controlled "
+        "scripts + data."
     )
     fig.text(
         0.01, 0.005, cap, fontsize=6.4, color="#444", wrap=True, ha="left", va="bottom"
