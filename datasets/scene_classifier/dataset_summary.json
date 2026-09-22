@@ -1,0 +1,24 @@
+{
+  "recordings_used": 2418,
+  "recordings_dropped_ambiguous": 5,
+  "total_labeled_tiles": 5382,
+  "positives": 1430,
+  "negatives": 3952,
+  "by_split": {
+    "train": 3522,
+    "val": 972,
+    "test": 888
+  },
+  "by_era": {
+    "clear": 3638,
+    "blurry": 1744
+  },
+  "pos_by_split": {
+    "train": 942,
+    "val": 224,
+    "test": 264
+  },
+  "neg_per_recording": 4,
+  "day_level_split_leaks": 0,
+  "seed": 20260922
+}
