@@ -1,0 +1,17 @@
+{
+  "model": "OLS manual ~ ai",
+  "b0": 18.2078,
+  "b1": 1.1121,
+  "r2": 0.2015,
+  "residual_sd": 11.9223,
+  "n_pairs": 229,
+  "aggregate_recall_ai_over_manual": 0.3799,
+  "ai_support_min": 1,
+  "ai_support_max": 28,
+  "n_ai_only_frames": 234,
+  "n_manual_tuesdays": 49,
+  "n_corrected_tuesdays": 43,
+  "bootstrap_n": 10000,
+  "bootstrap_seed": 20260922,
+  "bootstrap_method": "paired resample + residual resample, percentile 95% CI"
+}
