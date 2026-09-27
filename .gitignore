@@ -31,6 +31,10 @@ literature/**/*.pdf
 literature/**/*.epub
 literature/**/*.djvu
 
+# IRR round-2 packets (regenerable from scripts/build_irr_packet.py; contain
+# gitignored frames/*.png + the .zip — the generated manifests/notebook are outputs)
+validation/irr_round_2/packets/
+
 # Derived single-frame counting results (regenerable from 24_count_timeseries.ipynb)
 notebooks/timeseries_results_singleframe/
 notebooks/model_comparison_frames/
