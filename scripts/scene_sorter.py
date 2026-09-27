@@ -21,7 +21,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 #: Terminal decisions that move a sheet out of ``contact_sheets/``.
-FILED_DECISIONS: tuple[str, ...] = ("scene1", "not_scene1")
+#: ``unusable_blur`` = the vent view may be present but the image is too blurry to
+#: read (distinct from ``not_scene1`` = camera not showing the vent); it is filed
+#: like the others but counts as missing data (NA), never a zero, downstream.
+FILED_DECISIONS: tuple[str, ...] = ("scene1", "not_scene1", "unusable_blur")
 #: All decisions the UI may log ("skip" is logged but does not move a file).
 DECISIONS: tuple[str, ...] = (*FILED_DECISIONS, "skip")
 
@@ -34,6 +37,7 @@ class SessionPaths:
     contact_sheets: Path
     scene1: Path
     not_scene1: Path
+    unusable_blur: Path
     log_csv: Path
 
     def target_for(self, decision: str) -> Path:
@@ -41,6 +45,8 @@ class SessionPaths:
             return self.scene1
         if decision == "not_scene1":
             return self.not_scene1
+        if decision == "unusable_blur":
+            return self.unusable_blur
         raise ValueError(f"decision {decision!r} does not map to a folder")
 
 
@@ -52,9 +58,10 @@ def session_paths(session_dir: Path) -> SessionPaths:
         contact_sheets=root / "contact_sheets",
         scene1=root / "scene1",
         not_scene1=root / "not_scene1",
+        unusable_blur=root / "unusable_blur",
         log_csv=root / "sort_log.csv",
     )
-    for d in (paths.contact_sheets, paths.scene1, paths.not_scene1):
+    for d in (paths.contact_sheets, paths.scene1, paths.not_scene1, paths.unusable_blur):
         d.mkdir(parents=True, exist_ok=True)
     return paths
 
@@ -71,6 +78,7 @@ def counts(session_dir: Path) -> dict[str, int]:
     return {
         "scene1": len(list(paths.scene1.glob("*.png"))),
         "not_scene1": len(list(paths.not_scene1.glob("*.png"))),
+        "unusable_blur": len(list(paths.unusable_blur.glob("*.png"))),
         "pending": len(list(paths.contact_sheets.glob("*.png"))),
     }
 

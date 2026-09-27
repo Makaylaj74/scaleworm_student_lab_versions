@@ -46,6 +46,21 @@ class TestApplyDecision:
         dest = sorter.apply_decision(s, sorter.pending_sheets(s)[0], "not_scene1")
         assert dest.parent.name == "not_scene1"
 
+    def test_unusable_blur_moves_to_correct_folder(self, tmp_path):
+        s = _make_session(tmp_path, ["b"])
+        dest = sorter.apply_decision(s, sorter.pending_sheets(s)[0], "unusable_blur")
+        assert dest is not None
+        assert dest.parent.name == "unusable_blur"
+        assert dest.is_file()
+        assert sorter.pending_sheets(s) == []
+
+    def test_unusable_blur_time_raises(self, tmp_path):
+        s = _make_session(tmp_path, ["a"])
+        with pytest.raises(ValueError):
+            sorter.apply_decision(
+                s, s / "contact_sheets" / "a.png", "unusable_blur", scene1_time_s=100
+            )
+
     def test_skip_leaves_file_and_returns_none(self, tmp_path):
         s = _make_session(tmp_path, ["z"])
         sheet = sorter.pending_sheets(s)[0]
@@ -115,8 +130,13 @@ class TestApplyDecision:
 
 class TestCounts:
     def test_counts_track_moves(self, tmp_path):
-        s = _make_session(tmp_path, ["a", "b", "c"])
-        assert sorter.counts(s) == {"scene1": 0, "not_scene1": 0, "pending": 3}
+        s = _make_session(tmp_path, ["a", "b", "c", "d"])
+        assert sorter.counts(s) == {
+            "scene1": 0, "not_scene1": 0, "unusable_blur": 0, "pending": 4,
+        }
         sorter.apply_decision(s, s / "contact_sheets" / "a.png", "scene1")
         sorter.apply_decision(s, s / "contact_sheets" / "b.png", "not_scene1")
-        assert sorter.counts(s) == {"scene1": 1, "not_scene1": 1, "pending": 1}
+        sorter.apply_decision(s, s / "contact_sheets" / "c.png", "unusable_blur")
+        assert sorter.counts(s) == {
+            "scene1": 1, "not_scene1": 1, "unusable_blur": 1, "pending": 1,
+        }
