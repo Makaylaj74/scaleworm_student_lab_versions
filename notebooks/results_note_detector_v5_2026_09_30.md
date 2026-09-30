@@ -2,6 +2,16 @@
 
 # Detector retrain v5 — results note (2026-09-30)
 
+> **⚠️ CORRECTION (2026-09-30, later same day): the blurry results below are INVALID.**
+> The Monday blurry manual counts used both to *train* v5's blurry side (161 frames) and to
+> *gate* it (`model_comparison_handcount`) were systematic under-counts (~5 worms/frame). v5
+> learned to output ~5/frame on blurry footage regardless of true density, and the gate reused
+> the same bad counts, so it "passed" circularly. Against properly hand-counted **Tuesday**
+> blurry frames (mean 21/frame, dense), v5 recovers only **~32%**. **The "blurry 94%" claim and
+> all blurry deployment guidance below are retracted.** The **clear-window results stand** — they
+> were validated against independent *click* counts, not the suspect boxes. Fix in progress: a v6
+> blurry retrain on the correct Tuesday box-labels. See project memory `scaleworm-detector-retrain-v5`.
+
 Retrain of the scaleworm counting detector on the full accumulated manual annotation,
 with a leakage-safe held-out gate, per-regime operating points, and an abundance
 time series. Branch `image-quality-survey`; commits `d2493f1` (detector + gate) and
