@@ -1,0 +1,3 @@
+label,era,n,human,model,count_recall,point_recall,precision,f1,mae,bias
+v0_mushroom,CLEAR (clicks GT),39,449,268,0.5969,0.4811,0.806,0.6025,4.897,-4.641
+v0_mushroom,BLURRY (MJ-box GT),31,167,16,0.0958,0.0898,0.9375,0.1639,4.871,-4.871

@@ -54,3 +54,5 @@ notebooks/figure_*.html
 
 # Lyr 2017-2020 scene-sort delivery (448 MB; regenerable, never commit)
 notebooks/scene_sorting_lg.tar
+datasets/scaleworm_retrain_all/
+datasets/scaleworm_retrain_clear/
