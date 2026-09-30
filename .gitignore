@@ -51,3 +51,6 @@ external_data/**/*.dat
 
 # Generated interactive figures (regenerable from the plot_*.py scripts)
 notebooks/figure_*.html
+
+# Lyr 2017-2020 scene-sort delivery (448 MB; regenerable, never commit)
+notebooks/scene_sorting_lg.tar

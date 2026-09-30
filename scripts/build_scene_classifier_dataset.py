@@ -34,6 +34,7 @@ import csv
 import glob
 import hashlib
 import json
+import re
 from datetime import date, datetime
 from pathlib import Path
 
@@ -56,9 +57,20 @@ NEG_PER_RECORDING = 4
 SEED = 20260922
 
 
+_TS_RE = re.compile(r"(\d{8}T\d{6})")
+
+
 def stem_to_dt(stem: str) -> datetime:
-    """`CAMHDA301-20230808T061500` -> datetime."""
-    return datetime.strptime(stem.split("-", 1)[1], "%Y%m%dT%H%M%S")  # noqa: DTZ007 (naive UTC stem; used only for date math)
+    """Parse the UTC timestamp from a recording stem.
+
+    Handles both the 2021-2024 form ``CAMHDA301-20230808T061500`` and the
+    2015-2016 archive form ``CAMHDA301-20150716T010015Z_04`` (trailing ``Z`` and a
+    ``_NN`` segment index), which the plain ``strptime`` split could not.
+    """
+    m = _TS_RE.search(stem)
+    if m is None:
+        raise ValueError(f"no YYYYMMDDThhmmss timestamp in stem: {stem!r}")
+    return datetime.strptime(m.group(1), "%Y%m%dT%H%M%S")  # noqa: DTZ007 (naive UTC stem; used only for date math)
 
 
 def stem_to_video(stem: str, base: Path = ARCHIVE_BASE) -> Path:
