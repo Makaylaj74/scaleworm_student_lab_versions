@@ -23,10 +23,11 @@ def test_dt_from_stem_utc():
 
 
 def test_canonical_slots_membership():
-    # the 8 standard slots pass; a non-standard time is filtered out
-    assert "061500" in bhm.CANONICAL_SLOTS
-    assert "223000" not in bhm.CANONICAL_SLOTS
-    assert len(bhm.CANONICAL_SLOTS) == 8
+    # dual-family: 2017+ record at HH:15:00, 2015-2016 at HH:00:00
+    assert "061500" in bhm.CANONICAL_SLOTS  # 2017+ slot
+    assert "060000" in bhm.CANONICAL_SLOTS  # 2015-2016 slot
+    assert "223000" not in bhm.CANONICAL_SLOTS  # non-standard time filtered
+    assert len(bhm.CANONICAL_SLOTS) == 16  # 8 slots x 2 minute-families
 
 
 def test_aggregate_median_of_top3():

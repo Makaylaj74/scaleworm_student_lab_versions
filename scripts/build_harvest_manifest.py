@@ -16,10 +16,11 @@ from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 ARCHIVE = Path("/home/jovyan/ooi/san_data/RS03ASHS-PN03B-06-CAMHDA301")
-# The 8 canonical daily recording slots (every 3 h at :15). Some days carry extra
-# non-standard/high-rate recordings; the goal is a consistent 8 frames/day, so keep only these.
+# The 8 canonical daily recording slots (every 3 h). 2017+ record at HH:15:00, 2015-2016 at
+# HH:00:00 — accept both families so one filter covers all eras (no day uses both). Some days
+# carry extra non-standard/high-rate recordings; the goal is a consistent 8 frames/day.
 CANONICAL_SLOTS = frozenset(
-    {"001500", "031500", "061500", "091500", "121500", "151500", "181500", "211500"}
+    {f"{h:02d}{m}" for h in (0, 3, 6, 9, 12, 15, 18, 21) for m in ("1500", "0000")}
 )
 
 
