@@ -1,0 +1,15 @@
+{
+  "model": "scaleworm_v5_all",
+  "conf_clear": 0.4,
+  "form": "manual = a * ai_raw**p",
+  "a": 1.8817,
+  "p": 0.825,
+  "seed": 20260930,
+  "fit_n": 130,
+  "test_n": 110,
+  "test_overall_ratio_before": 0.8242,
+  "test_overall_ratio_after": 0.9931,
+  "test_mae_before": 3.482,
+  "test_mae_after": 3.135,
+  "note": "clear-era crowding correction; blurry needs no correction (94% raw)"
+}
