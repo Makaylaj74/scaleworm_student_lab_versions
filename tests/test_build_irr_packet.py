@@ -51,11 +51,17 @@ def test_blank_manifest_rows():
 def test_build_notebook_structure():
     nb = bip.build_notebook("LG", 12)
     assert nb["nbformat"] == 4
-    assert len(nb["cells"]) == 3
+    assert len(nb["cells"]) == 4
     assert nb["cells"][0]["cell_type"] == "markdown"
-    config = "".join(nb["cells"][1]["source"])
+    # self-contained setup cell installs ipympl so no special kernel is needed
+    setup = "".join(nb["cells"][1]["source"])
+    assert "ipympl" in setup
+    config = "".join(nb["cells"][2]["source"])
     assert 'irr_packet_LG' in config
     assert 'COUNTER = "LG"' in config
+    # generic default kernel, not a personal/shared one
+    assert nb["metadata"]["kernelspec"]["name"] == "python3"
+    assert "joseph-scaleworm-thesis" not in json.dumps(nb)
     # the whole notebook must be JSON-serialisable
     json.dumps(nb)
 

@@ -106,9 +106,11 @@ def _md_source(rater: str, n_frames: int) -> str:
         f"You have **{n_frames} frames**. For each frame, **draw a box on every "
         "scaleworm you can see** -- this is a *blind* count, so there are no "
         "pre-drawn boxes; you start from an empty frame.\n\n"
-        "**Kernel:** pick a kernel that has `ipympl` (on the Hub, "
-        "`joseph-scaleworm-thesis` has it). If boxes don't appear when you click, "
-        "the widget backend isn't active -- switch kernel and Restart & Run All.\n\n"
+        "**Kernel:** use your normal **Python 3** kernel -- no special or shared "
+        "kernel is needed. The first cell installs the clicking backend (`ipympl`) "
+        "into that kernel automatically the first time you run it. If no clickable "
+        "picture appears, reload the browser tab and run **Kernel > Restart & Run "
+        "All** once more.\n\n"
         "**How to use**\n"
         "1. **Left-click each worm** -> drops a box on it.\n"
         "2. **Right-click** a box to delete it; **Undo** / **Clear** for last / all.\n"
@@ -120,6 +122,25 @@ def _md_source(rater: str, n_frames: int) -> str:
         "the end, follow the README to send `labels/` + `irr_manifest.csv` back.\n\n"
         "</span>"
     )
+
+
+def _setup_source() -> str:
+    return '''# --- One-time setup: make THIS kernel able to do the click-to-label ---
+# You do NOT need any special or shared kernel -- your normal Python 3 kernel
+# is fine. This installs the interactive plotting backend (ipympl) into it the
+# first time only. Safe to re-run: it does nothing if ipympl is already present.
+try:
+    import ipympl  # noqa: F401
+except ModuleNotFoundError:
+    import subprocess
+    import sys
+
+    print("Installing the clicking backend (ipympl) -- about 30 seconds...")
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "ipympl"], check=True)
+    print(
+        "Done. If no clickable picture appears below, reload this browser tab,\\n"
+        "then run  Kernel > Restart Kernel and Run All Cells  once more."
+    )'''
 
 
 def _config_source(rater: str) -> str:
@@ -372,14 +393,18 @@ def build_notebook(rater: str, n_frames: int) -> dict:
     return {
         "cells": [
             md(_md_source(rater, n_frames)),
+            code(_setup_source()),
             code(_config_source(rater)),
             code(_labeler_source()),
         ],
         "metadata": {
+            # Generic default kernel present on every Jupyter install -- the packet
+            # is self-contained (the setup cell installs ipympl), so raters never
+            # need a special or shared kernel.
             "kernelspec": {
-                "display_name": "joseph-scaleworm-thesis",
+                "display_name": "Python 3 (ipykernel)",
                 "language": "python",
-                "name": "joseph-scaleworm-thesis",
+                "name": "python3",
             },
             "language_info": {"name": "python"},
         },
@@ -412,11 +437,14 @@ about **1 hour**. You can stop and come back anytime; it remembers where you lef
    have a folder called `irr_packet_{rater}` sitting in your home directory
    (the file browser on the left, top level).
 2. Inside that folder, **double-click `labeler.ipynb`** to open it.
-3. At the **top-right of the notebook**, click the kernel name and choose
-   **`joseph-scaleworm-thesis`** from the list. (This is the one that lets the clicking
-   work. If you don't see it, ask Makayla.)
+3. At the **top-right of the notebook**, the kernel should say **Python 3** (the
+   default). If a small window pops up asking you to *Select Kernel*, just pick
+   **Python 3** and click Select. You do **not** need any special or shared kernel.
 4. In the top menu, click **Kernel ▸ Restart Kernel and Run All Cells…** and confirm.
-5. Wait a few seconds. A **picture with buttons above it** appears. You're ready.
+5. **The first time only,** the top cell spends about 30 seconds installing a small
+   plotting add-on. When a **picture with buttons above it** appears, you're ready. If
+   the area under the cells instead looks empty, **reload this browser tab** and do
+   step 4 once more — it will be instant the second time.
 
 ---
 

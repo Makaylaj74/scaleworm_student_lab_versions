@@ -58,8 +58,9 @@ Drive folder — each is ~tens of MB of images). Makayla keeps/annotates `irr_pa
 
 ### 3. They annotate (each rater, independently)
 Instructions are inside each zip (`README.md`). In short: unzip into the home directory,
-open `labeler.ipynb`, pick a kernel with `ipympl` (`joseph-scaleworm-thesis` on the
-Hub), Restart & Run All, left-click every worm, **Save & Next** through all frames.
+open `labeler.ipynb` (uses the generic **Python 3** kernel — the first cell installs
+`ipympl` into it, so no special or shared kernel is needed), Restart & Run All,
+left-click every worm, **Save & Next** through all frames.
 
 ### 4. They send results back
 Each rater returns **only** `labels/` + `irr_manifest.csv` (a `<id>_results.zip`, a few
