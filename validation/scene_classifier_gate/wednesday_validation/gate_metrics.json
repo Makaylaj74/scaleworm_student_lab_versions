@@ -1,0 +1,329 @@
+{
+  "n_paired": 96,
+  "agreement": 0.8541666666666666,
+  "agree_ci95": [
+    0.7699800750432338,
+    0.9110987538216883
+  ],
+  "cohen_kappa": 0.7092167892687148,
+  "n_human_scene1": 41,
+  "n_model_scene1": 49,
+  "disagreements": [
+    {
+      "stem": "CAMHDA301-20210922T091500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.917"
+    },
+    {
+      "stem": "CAMHDA301-20220112T151500",
+      "human": "scene1",
+      "model": "not_scene1",
+      "model_p": "0.5606"
+    },
+    {
+      "stem": "CAMHDA301-20220202T121500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9422"
+    },
+    {
+      "stem": "CAMHDA301-20220209T061500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9445"
+    },
+    {
+      "stem": "CAMHDA301-20220406T181500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9864"
+    },
+    {
+      "stem": "CAMHDA301-20221102T061500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9622"
+    },
+    {
+      "stem": "CAMHDA301-20230301T121500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9842"
+    },
+    {
+      "stem": "CAMHDA301-20230329T061500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9927"
+    },
+    {
+      "stem": "CAMHDA301-20230426T001500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9997"
+    },
+    {
+      "stem": "CAMHDA301-20231220T031500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9444"
+    },
+    {
+      "stem": "CAMHDA301-20240424T151500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.9934"
+    },
+    {
+      "stem": "CAMHDA301-20240515T031500",
+      "human": "not_scene1",
+      "model": "scene1",
+      "model_p": "0.997"
+    },
+    {
+      "stem": "CAMHDA301-20240619T121500",
+      "human": "scene1",
+      "model": "not_scene1",
+      "model_p": "0.4229"
+    },
+    {
+      "stem": "CAMHDA301-20240717T031500",
+      "human": "scene1",
+      "model": "not_scene1",
+      "model_p": "0.895"
+    }
+  ],
+  "timing_n": 38,
+  "timing_within_1tile": 33,
+  "timing_detail": [
+    {
+      "stem": "CAMHDA301-20210915T121500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211013T031500",
+      "human_t": 510,
+      "model_t": 540,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20211013T061500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211027T001500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211027T121500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211027T151500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211117T151500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211117T181500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211117T211500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211215T001500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211222T211500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211229T061500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211229T091500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20211229T211500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20220105T001500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20220309T001500",
+      "human_t": 540,
+      "model_t": 540,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20220615T091500",
+      "human_t": 240,
+      "model_t": 240,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20220622T001500",
+      "human_t": 210,
+      "model_t": 210,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20220622T031500",
+      "human_t": 210,
+      "model_t": 180,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20220629T121500",
+      "human_t": 210,
+      "model_t": 180,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20220727T151500",
+      "human_t": 450,
+      "model_t": 210,
+      "abs_dt_s": 240
+    },
+    {
+      "stem": "CAMHDA301-20220817T181500",
+      "human_t": 210,
+      "model_t": 210,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20220907T031500",
+      "human_t": 210,
+      "model_t": 210,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20220921T031500",
+      "human_t": 210,
+      "model_t": 180,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20221109T211500",
+      "human_t": 210,
+      "model_t": 180,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20221214T211500",
+      "human_t": 210,
+      "model_t": 210,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20221221T091500",
+      "human_t": 210,
+      "model_t": 180,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20230111T181500",
+      "human_t": 450,
+      "model_t": 210,
+      "abs_dt_s": 240
+    },
+    {
+      "stem": "CAMHDA301-20230118T151500",
+      "human_t": 450,
+      "model_t": 210,
+      "abs_dt_s": 240
+    },
+    {
+      "stem": "CAMHDA301-20230201T091500",
+      "human_t": 450,
+      "model_t": 390,
+      "abs_dt_s": 60
+    },
+    {
+      "stem": "CAMHDA301-20230215T121500",
+      "human_t": 420,
+      "model_t": 450,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20230329T031500",
+      "human_t": 450,
+      "model_t": 210,
+      "abs_dt_s": 240
+    },
+    {
+      "stem": "CAMHDA301-20230412T031500",
+      "human_t": 210,
+      "model_t": 180,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20230412T091500",
+      "human_t": 210,
+      "model_t": 180,
+      "abs_dt_s": 30
+    },
+    {
+      "stem": "CAMHDA301-20230412T151500",
+      "human_t": 210,
+      "model_t": 210,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20230712T091500",
+      "human_t": 210,
+      "model_t": 210,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20240731T121500",
+      "human_t": 450,
+      "model_t": 450,
+      "abs_dt_s": 0
+    },
+    {
+      "stem": "CAMHDA301-20240807T181500",
+      "human_t": 450,
+      "model_t": 420,
+      "abs_dt_s": 30
+    }
+  ]
+}

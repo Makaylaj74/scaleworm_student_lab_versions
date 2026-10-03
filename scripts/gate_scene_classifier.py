@@ -165,7 +165,7 @@ def score_gate(preds: list[dict], session: Path) -> dict | None:
     }
 
 
-def write_report(gate: dict, out_dir: Path) -> Path:
+def write_report(gate: dict, out_dir: Path, session_name: str = "session") -> Path:
     """gate_results.md with the lab AI-disclosure label (prose intended for humans)."""
     p = out_dir / "gate_results.md"
     k = gate.get("cohen_kappa", float("nan"))
@@ -188,7 +188,7 @@ def write_report(gate: dict, out_dir: Path) -> Path:
     lines = [
         disclosure,
         "",
-        "# Scene-classifier gate — blind 2016 subsample",
+        f"# Scene-classifier gate — blind sort: {session_name}",
         "",
         f"**Verdict: {verdict}** (Cohen's kappa = {k:.3f}).",
         "",
@@ -209,11 +209,11 @@ def write_report(gate: dict, out_dir: Path) -> Path:
         "the human's marked time."
     )
     caveat_line = (
-        "Caveats (Defensible Statistics): n is small (a 24-sheet subsample), so the "
-        "agreement CI is wide and kappa is sensitive to the Scene-1/not base rate. This "
-        "gate tests the 2016 (clear-era) transfer specifically; post-2023 blurry footage "
-        "is weaker (see metrics.json). The count target for the early era is a separate "
-        "open decision (advisor)."
+        "Caveats (Defensible Statistics): kappa is sensitive to the Scene-1/not base rate; "
+        "the agreement CI reflects n. The human sort is the reference, so "
+        "model-Scene-1/human-not disagreements may be genuine model errors OR borderline "
+        "cases where the human was stricter — eyeball the high-confidence ones. Tile-level "
+        "blurry recall is weaker than clear (see metrics.json)."
     )
     lines += ["", timing_line, "", caveat_line]
     p.write_text("\n".join(lines) + "\n")
@@ -250,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
     import json
 
     (out_dir / "gate_metrics.json").write_text(json.dumps(gate, indent=2))
-    report = write_report(gate, out_dir)
+    report = write_report(gate, out_dir, args.session.name)
     print(f"GATE: kappa={gate['cohen_kappa']:.3f} agreement={gate['agreement']:.1%} "
           f"(n={gate['n_paired']})  ->  {report}")
     return 0
