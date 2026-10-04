@@ -1,0 +1,5 @@
+n_blurry_labels,model,era,conf,n,human,model_total,count_recall,point_recall,point_recall_ci_lo,point_recall_ci_hi,precision,f1,mae,bias
+0,v5_all (baseline),"BLURRY (Tuesday-dense, MJ-box GT)",0.25,23,579,171,0.2953,0.2435,0.2166,0.3071,0.8246,0.376,17.739,-17.739
+15,v6_scale_n15,"BLURRY (Tuesday-dense, MJ-box GT)",0.25,23,579,157,0.2712,0.2193,0.1862,0.2619,0.8089,0.3451,18.348,-18.348
+30,v6_scale_n30,"BLURRY (Tuesday-dense, MJ-box GT)",0.25,23,579,207,0.3575,0.2763,0.2531,0.3248,0.7729,0.4071,16.174,-16.174
+47,v6_scale_n47,"BLURRY (Tuesday-dense, MJ-box GT)",0.25,23,579,128,0.2211,0.209,0.1848,0.2536,0.9453,0.3423,19.609,-19.609
