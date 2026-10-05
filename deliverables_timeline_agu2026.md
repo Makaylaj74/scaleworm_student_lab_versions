@@ -7,8 +7,8 @@ signals (diffuse-flow temperature, caldera inflation, seismicity), plus a
 **dw/dt** (rate-of-change) series, ready by **mid-November 2026** for the AGU
 poster (AGU early December).
 
-**Owner:** Makayla Joseph. **Advisor:** Dax Soule. **Students:** Lyr Gada
-(2017–2018 scene sort), + one to assign (2019–2020 scene sort), Maureen Scully
+**Owner:** Makayla Joseph. **Advisor:** Dax Soule. **Students:** Rater B Gada
+(2017–2018 scene sort), + one to assign (2019–2020 scene sort), Rater C Scully
 (OOI 2017–2018 camera timeline).
 
 ## Method model (why this is feasible in 2 months)
@@ -29,7 +29,7 @@ poster (AGU early December).
 | Sep 2021 – Dec 2022 | done | manual | Makayla — nb 33 (351 pending) |
 | Spring 2021 (temp-spike) | in progress | manual | Makayla — nb 25 → nb 33 |
 | **2019–2020** | **to assign** | AI + gate | **new student** (assignment to draft) |
-| 2017–2018 | in progress | AI + gate | **Lyr Gada** |
+| 2017–2018 | in progress | AI + gate | **Rater B Gada** |
 
 Camera units swap each August, so 2017–2024 spans ~8 units; each AI-counted unit
 needs its own recall gate. **2018 is ~half black footage** (lights off) → expect a
@@ -43,11 +43,11 @@ thin year. 2015–2016 = optional stretch only if time allows.
   (`run_ai_counts.py`) and the **manual-vs-AI** comparison. — in progress.
 - [Makayla] Finish the 351 pending 2021–2022 counts (nb 33); sort the spring-2021
   spike weeks (nb 25). Assign the 2019–2020 sorter.
-- [Lyr] Sort 2017–2018.
+- [Rater B] Sort 2017–2018.
 
 **Phase B — Historical ingestion (Sep 29 – Oct 17)**
 - [Students] Sort 2017–2020.
-- [Makayla/Lyr] Hand-count **per-unit gate** frames (~20–30 per camera-year,
+- [Makayla/Rater B] Hand-count **per-unit gate** frames (~20–30 per camera-year,
   2016–2020) to measure detector recall.
 - [Claude] AI-count each year as its sort lands; run manual-vs-AI on 2021–2024;
   report which units pass/fail their gate (decide include / caveat / quick fine-tune).

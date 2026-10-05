@@ -3,13 +3,13 @@
 # Assignment — Scene-Sorting the HD Mushroom-Vent Camera, 2019–2020
 
 **Assigned to:** _(to be assigned)_
-**Parallel work:** Lyr Gada (scene-sorting 2017–2018) · Maureen Scully (OOI operational timeline 2017–2018)
+**Parallel work:** Rater B Gada (scene-sorting 2017–2018) · Rater C Scully (OOI operational timeline 2017–2018)
 **Project:** Scaleworm thesis (GEOL 795), Queens College CUNY
 **Instrument:** CAMHDA301 — OOI Regional Cabled Array HD camera, Mushroom vent, ASHES vent field, Axial Seamount (`RS03ASHS`)
 
 ## Goal
 
-Run the existing Scene-1 scene sorter over the CAMHDA301 record for **2019–2020** and report, month by month, how many **clear Scene-1** frames exist. This closes the gap between Lyr's 2017–2018 work and the already-sorted 2021–2024 record, so the team has a continuous 2017–2024 backbone. Your output tells us which 2019–2020 months have imagery good enough to count scaleworms in.
+Run the existing Scene-1 scene sorter over the CAMHDA301 record for **2019–2020** and report, month by month, how many **clear Scene-1** frames exist. This closes the gap between Rater B's 2017–2018 work and the already-sorted 2021–2024 record, so the team has a continuous 2017–2024 backbone. Your output tells us which 2019–2020 months have imagery good enough to count scaleworms in.
 
 ## Background you need
 
@@ -47,7 +47,7 @@ Why this matters downstream: 2019–2020 will be **counted by the AI detector**,
 
 Pre-filled with the **video actually on disk** (Monday × 8-slot targets present) as of the
 2026-09-16 contact-sheet build. **There is a large mid-period gap (2019-08 → 2020-07) with no
-footage on disk** — treat those months as *camera-off / not-downloaded* until Maureen's timeline
+footage on disk** — treat those months as *camera-off / not-downloaded* until Rater C's timeline
 (or the OOI deployment records) confirms which; do **not** score them as "sorter found nothing."
 Fill the "Clear Scene-1 count" column as you sort.
 

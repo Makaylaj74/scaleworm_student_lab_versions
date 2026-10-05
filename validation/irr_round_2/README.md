@@ -1,7 +1,7 @@
 *AI-generated draft (Claude, Anthropic) — for review. Every step derives from the
 version-controlled `scripts/build_irr_packet.py` and `scripts/irr_counts_agreement.py`.*
 
-# IRR Round 2 — manual worm counts (Lyr & Maureen)
+# IRR Round 2 — manual worm counts (Rater B & Rater C)
 
 Round 1 validated the **scene-sorting** decision (Scene-1 vs not) with kappa. Round 2
 validates the **counting** step: do independent raters get the same worm *counts* (and
@@ -53,7 +53,7 @@ python scripts/build_irr_packet.py LG MS MJ
 ```
 
 ### 2. Send the packets out
-Give `irr_packet_LG.zip` to Lyr and `irr_packet_MS.zip` to Maureen (email or a shared
+Give `irr_packet_LG.zip` to Rater B and `irr_packet_MS.zip` to Rater C (email or a shared
 Drive folder — each is ~tens of MB of images). Makayla keeps/annotates `irr_packet_MJ`.
 
 ### 3. They annotate (each rater, independently)
