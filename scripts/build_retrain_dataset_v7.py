@@ -1,0 +1,139 @@
+"""Build the v7 ADDITIVE retrain dataset = v5's leakage-safe Monday set ∪ the 22 new
+Jan-Jul 2021 box-labeled frames.
+
+Motivation: v7_2021 (warm-start v5_all, fine-tuned on ONLY the 99-frame scaleworm_v2 set)
+REGRESSED the clear window because that set is disjoint from v5's 421-frame Monday training
+→ the model forgot. The fix is to make the 2021 coverage ADDITIVE: train from mushroom.pt
+(v5-style) on the union, so the model keeps everything v5 knew AND gains Jan-Jul 2021.
+
+Reuses build_retrain_dataset.py for the exact leakage-safe day-level split (so the Monday
+portion is byte-identical to v5's retrain_all). The 22 Jan-Jul 2021 frames come from
+datasets/scaleworm_v2/{images,labels}/{train,val} (committed in f334fb7; the 2 gate-colliding
+days 0216/0617 were already quarantined, so they are NOT among the 22). All 22 go to TRAIN.
+
+Output: datasets/scaleworm_retrain_v7/ (symlinked images+labels, data.yaml).
+Run: python scripts/build_retrain_dataset_v7.py
+"""
+
+from __future__ import annotations
+
+import random
+import sys
+from collections import Counter
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import build_retrain_dataset as brd
+
+REPO = brd.REPO
+V2 = REPO / "datasets" / "scaleworm_v2"
+OUT_NAME = "scaleworm_retrain_v7"
+
+
+def janaug_2021_frames() -> list[tuple[str, Path, Path]]:
+    """The 22 new Jan-Jul 2021 frames: (stem, image_path, label_path) from scaleworm_v2.
+
+    Months 01-07 only (Sep-Dec 2021 in scaleworm_v2 is the OLD batch, already in the Monday
+    series). Pulls from both train/ and val/ since make_val_split split them across both.
+    """
+    out: list[tuple[str, Path, Path]] = []
+    for split in ("train", "val"):
+        for lab in sorted((V2 / "labels" / split).glob("CAMHDA301-2021*.txt")):
+            month = lab.stem.split("-")[1][4:6]
+            if month not in {"01", "02", "03", "04", "05", "06", "07"}:
+                continue
+            img = next((V2 / "images" / split).glob(f"{lab.stem}.*"), None)
+            if img is None:
+                raise FileNotFoundError(f"no image for {lab.stem}")
+            out.append((lab.stem, img, lab))
+    return out
+
+
+def compute_monday_split() -> tuple[list[str], list[str], set[str]]:
+    """Replicate build_retrain_dataset's leakage-safe day-level split (seed-identical)."""
+    import glob
+
+    monday = sorted(
+        Path(p).stem for p in glob.glob(str(brd.MONDAY / "labels" / "*.txt"))
+    )
+    for s in monday:  # fail fast on a corrupt annotation, same as v5 build
+        brd.validate_label(brd.MONDAY / "labels" / f"{s}.txt")
+
+    clear_gate = brd.counted_stems(brd.CLEAR_GATE)
+    blurry_gate = brd.counted_stems(brd.BLURRY_GATE)
+    gate = clear_gate | blurry_gate
+    gate_days = {brd.day_of(s) for s in gate}
+    safe = [s for s in monday if brd.day_of(s) not in gate_days]
+
+    rng = random.Random(brd.SEED)
+    days_by_era: dict[str, list[str]] = {"clear": [], "blurry": []}
+    for d in sorted({brd.day_of(s) for s in safe}):
+        era = "clear" if d < brd.SWAP_DAY else "blurry"
+        days_by_era[era].append(d)
+    val_days: set[str] = set()
+    for days in days_by_era.values():
+        days = days[:]
+        rng.shuffle(days)
+        k = max(1, round(len(days) * brd.VAL_DAY_FRACTION))
+        val_days.update(days[:k])
+
+    all_train = [s for s in safe if brd.day_of(s) not in val_days]
+    all_val = [s for s in safe if brd.day_of(s) in val_days]
+    return all_train, all_val, gate_days
+
+
+def main() -> None:
+    all_train, all_val, gate_days = compute_monday_split()
+    extra = janaug_2021_frames()
+    extra_stems = [s for s, _i, _l in extra]
+    extra_days = {brd.day_of(s) for s in extra_stems}
+
+    # leakage + sanity asserts
+    monday_stems = set(all_train) | set(all_val)
+    assert not (extra_days & gate_days), "a Jan-Jul 2021 frame shares a gate day"
+    assert not (set(extra_stems) & monday_stems), "2021 frame duplicates a Monday frame"
+    assert len(extra_stems) == len(set(extra_stems)), "duplicate 2021 stems"
+
+    root = REPO / "datasets" / OUT_NAME
+    for sub in ("images/train", "images/val", "labels/train", "labels/val"):
+        d = root / sub
+        if d.exists():
+            for p in d.iterdir():
+                p.unlink()
+        d.mkdir(parents=True, exist_ok=True)
+
+    # Monday portion (byte-identical sources to v5 retrain_all)
+    for split, stems in (("train", all_train), ("val", all_val)):
+        for stem in stems:
+            img = brd.image_for(stem)
+            (root / "images" / split / img.name).symlink_to(img)
+            (root / "labels" / split / f"{stem}.txt").symlink_to(
+                brd.MONDAY / "labels" / f"{stem}.txt"
+            )
+    # additive Jan-Jul 2021 frames -> ALL to train
+    for stem, img, lab in extra:
+        (root / "images" / "train" / img.name).symlink_to(img)
+        (root / "labels" / "train" / f"{stem}.txt").symlink_to(lab)
+
+    n_train = len(all_train) + len(extra)
+    (root / "data.yaml").write_text(
+        f"# Auto-generated by build_retrain_dataset_v7.py (seed {brd.SEED}).\n"
+        f"# {OUT_NAME}: v5 retrain_all ({len(all_train)}) + {len(extra)} Jan-Jul 2021 "
+        f"= {n_train} train / {len(all_val)} val (day-level split, additive).\n"
+        f"# Held-out TEST = external gates (clear-39, blurry-31, 4 Jan-Aug), scored via gate scripts.\n"
+        f"path: {root}\n"
+        f"train: images/train\n"
+        f"val: images/val\n"
+        f"names:\n  0: scale_worm\n"
+    )
+
+    print(f"Monday safe split : train={len(all_train)} val={len(all_val)}")
+    print(f"added Jan-Jul 2021 : {len(extra)} frames (all -> train)")
+    print(f"  months: {dict(Counter(brd.day_of(s)[4:6] for s in extra_stems))}")
+    print(f"v7 dataset        : train={n_train} val={len(all_val)}")
+    print("leakage checks PASSED (2021 frames gate-day-disjoint, no Monday dup)")
+    print(f"wrote {root}")
+
+
+if __name__ == "__main__":
+    main()

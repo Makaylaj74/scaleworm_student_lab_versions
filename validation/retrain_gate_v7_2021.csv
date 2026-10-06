@@ -1,0 +1,3 @@
+label,era,n,human,model,count_recall,point_recall,precision,f1,mae,bias
+v7_2021,CLEAR (clicks GT),39,449,352,0.784,0.6125,0.7812,0.6866,3.462,-2.487
+v7_2021,BLURRY (MJ-box GT),31,167,153,0.9162,0.6407,0.6993,0.6688,1.677,-0.452
