@@ -72,9 +72,13 @@ def fig_mf(df: pd.DataFrame) -> None:
     cap = ("AI-generated caption (Claude, Anthropic) — Weekly-mean scale-worm abundance (worms per "
            f"Scene-1 frame) on OOI RS03ASHS CAMHDA301, all weekdays Mon–Fri, {span} (clear window; "
            "blurry post-2023-08 era excluded). Automated by the v8_tiled detector with SAHI tiled "
-           "inference, max over a 60 s grid per recording (derived file harvest_clear_v8sahi_2021_2023.csv"
-           "). Conservative relative/aggregate index (sparse frames over-counted via max-selection, dense "
-           "peaks under-counted at the detection ceiling). Shaded band = ±1 SEM across the ~20–40 "
+           "inference, max over a 60 s grid per recording (derived files harvest_clear_v8sahi_2021_2023.csv "
+           "and harvest_janaug2021_v8sahi.csv). Conservative relative/aggregate index (sparse frames "
+           "over-counted via max-selection, dense peaks under-counted at the detection ceiling). "
+           "NOTE: manual box-count validation exists only from 2021-09 onward; the Jan–Aug 2021 segment is "
+           "unvalidated (no manual truth, and the pre-Sep-2021 frame-finder was unreliable under the prior "
+           "detector) — Mar–Dec 2021 is continuous with the validated window but Jan–Feb reads low (genuine "
+           "early-year low or residual artifact, unresolved). Shaded band = ±1 SEM across the ~20–40 "
            "recordings per week; gaps = weeks without usable recordings (not interpolated).")
     fig.subplots_adjust(bottom=0.28, top=0.88)
     fig.text(0.5, 0.015, cap, ha="center", va="bottom", wrap=True, fontsize=7.5)

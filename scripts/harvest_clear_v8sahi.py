@@ -39,7 +39,8 @@ GRID = list(range(int(os.environ.get("T0", "90")), int(os.environ.get("T1", "630
 EXT_WORKERS = int(os.environ.get("EXT_WORKERS", "8"))  # ffmpeg threads (lab cap: <=24)
 LIMIT = int(os.environ.get("LIMIT", "0"))
 SCRATCH = Path("/tmp/claude-1000/-home-jovyan/d15fee80-de61-4938-b37b-519c259912ed/scratchpad/harvest_v8")
-CLEAR_LO, CLEAR_HI = "20210901", "20230811"
+CLEAR_LO = os.environ.get("LO", "20210901")  # window bounds (YYYYMMDD), default = clear window
+CLEAR_HI = os.environ.get("HI", "20230811")
 FIELDS = ["frame_id", "datetime_utc", "best_time_s", "count_v8sahi_max", "n_frames", "all_counts"]
 
 
