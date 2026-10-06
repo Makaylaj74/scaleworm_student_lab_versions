@@ -70,6 +70,42 @@ def icc21(x, y) -> float:
     return (msr - mse) / (msr + (k - 1) * mse + k * (msc - mse) / n)
 
 
+def paired_figure(stems, x, y, bias, icc) -> None:
+    """Intuitive dumbbell plot: each frame a row with Makayla's and Rater B's count, connected."""
+    order = np.argsort(x)  # sort rows by Makayla's count
+    stems = [stems[i] for i in order]
+    x, y = x[order], y[order]
+    rows = np.arange(len(stems))
+    fig, ax = plt.subplots(figsize=(9, 7))
+    for i in rows:
+        ax.plot([x[i], y[i]], [i, i], color="0.75", lw=1.5, zorder=1)
+    ax.scatter(x, rows, s=70, color="#000000", zorder=2, label="Makayla")
+    ax.scatter(y, rows, s=70, color=C_LINE, zorder=2, label="Rater B")
+    ax.set_yticks(rows)
+    ax.set_yticklabels([s.split("-")[1][:8] for s in stems], fontsize=8)
+    ax.set_xlabel("Worms counted in the frame", fontweight="bold", fontsize=11)
+    ax.set_ylabel("Frame (date, sorted by Makayla's count)", fontweight="bold", fontsize=11)
+    ax.set_title("Worms counted per frame — Makayla vs Rater B (same 17 frames)\n"
+                 f"Rater B counts fewer on every frame (avg {bias:+.1f}/frame; ICC {icc:.2f})  "
+                 "[interim, method-confounded]", fontsize=12)
+    ax.grid(alpha=0.3, axis="x")
+    ax.set_xlim(0, max(x.max(), y.max()) + 2)
+    for sp in ax.spines.values():
+        sp.set_linewidth(1.0)
+    ax.legend(loc="lower right", framealpha=0.9, fontsize=10)
+    cap = ("AI-generated caption (Claude, Anthropic) — Each row is one of the 17 frames both raters "
+           "counted (scale worms, CAMHDA301); the black dot is Makayla's count, the orange dot is Rater B's, "
+           "joined by a line whose length is their disagreement. Rows sorted by Makayla's count. Rater B counts "
+           "fewer worms on every frame. INTERIM AND CONFOUNDED: Makayla's counts were corrected from "
+           "detector pre-labels while Rater B counted from scratch, so part of the gap is method, not rater; "
+           "the clean comparison needs Makayla's blind from-scratch packet (pending). "
+           "Source: validation/irr_round_2/raters/MJ_monday, notebooks/LG_results.")
+    fig.subplots_adjust(bottom=0.22, top=0.90)
+    fig.text(0.5, 0.015, cap, ha="center", va="bottom", wrap=True, fontsize=7.5)
+    fig.savefig(REPO / "notebooks/figure_irr_mj_vs_lg_paired.png", dpi=300, bbox_inches="tight")
+    print("wrote figure_irr_mj_vs_lg_paired.png (intuitive per-frame version)")
+
+
 def main() -> None:
     cm, cl = counts(MJ), counts(LG)
     stems = sorted(set(cm) & set(cl))
@@ -79,6 +115,7 @@ def main() -> None:
     bias = (y - x).mean()
     icc = icc21(x, y)
     p, rec, f1 = box_f1()
+    paired_figure(stems, x.copy(), y.copy(), bias, icc)
 
     fig, (axA, axB) = plt.subplots(1, 2, figsize=(12, 5.2))
 
