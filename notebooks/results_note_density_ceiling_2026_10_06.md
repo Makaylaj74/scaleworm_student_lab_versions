@@ -37,9 +37,17 @@ Because the population peaks are exactly the events one would correlate with geo
 - **Magnitude correlations at the peaks** (how *large* a population response accompanies a given geophysical magnitude) must **not** use the automated index at the peaks, which is a lower bound there. For peak magnitude, use the **manual Monday box counts**, which do *not* saturate (humans counted the dense frames directly, up to ~47), bounded only by the ~2× human uncertainty. The manual Monday series is weekly and spans 2021–2024 — adequate for weekly/monthly geophysical comparison.
 - **Practical recommendation for the geophysics comparison:** anchor peak magnitudes to the manual Monday series; use the automated Mon–Fri index for temporal coverage, trend, and timing. State the peak-magnitude caveat wherever absolute population magnitude enters a correlation.
 
-## 5. The only path to accurate *automated* peak magnitudes
+## 5. The hard case: dense peaks in eras with no manual counts (e.g. 2015–2016)
 
-If accurate peak magnitudes are later needed beyond the manual Monday anchor (e.g. to extend magnitude-based correlations to the full weekday record or to pre-2021 / post-2023 eras with no manual counts), the sole principled route is a **density-estimation model** — crowd-counting-style density-map regression that reads the image rather than detecting individuals, which is the standard computer-vision tool for the "too many to separate" regime. It would improve peak magnitudes but remains bounded by the ~2× human ground-truth uncertainty. This is a substantial new model, recorded here as the identified next step should the need arise.
+The manual-Monday anchor in §4 only covers 2021–2024. The eras that most motivate the study — notably the **2015–2016 post-eruption colonization**, a population boom — have **no manual series**, so the anchor provides nothing there, and the automated detector both **saturates** (dense) and is **out-of-distribution** (2015 is a dense tubeworm-mound scene unlike the 2021–24 tower; the detector recovers only ~28% there, so it is unreliable even for timing). For these eras the automated pipeline cannot stand alone.
+
+This does **not** require hand-counting every frame (~20k) — that would defeat the automation. The workable path per unmanualled dense era is:
+
+1. **A sparse manual anchor** — count a *representative subset* (tens of frames per month, as was done for the 2017 salvage), enough to establish the trend and pin magnitude, not the whole archive.
+2. **An era-appropriate dense metric** — for a dense colonization mat, *percent-cover / density* is likely the correct measurable: it does not saturate the way individual counting does, and humans agree on cover far better than on exact dense counts. Whether an early-era population is measured as a **count** or a **cover/density** is an advisor-level "count target" decision; **2015–2016 is currently blocked on exactly this decision**, which this limitation shows to be load-bearing for the core science, not a detail.
+3. **Optionally, a density-estimation / segmentation model** trained on those sparse era labels to scale the anchor across the era. Crowd-counting-style density-map regression reads the image rather than detecting individuals and is the standard tool for the "too many to separate" regime; it remains bounded by the ~2× human ground-truth uncertainty and would itself need a few hundred era-specific labels (not 20k).
+
+**Summary of the measurement strategy by regime:** 2021–2024 clear window — automated index (trend + timing) with peak magnitude anchored to manual Monday; dense unmanualled eras (2015–2016, and any future dense era) — sparse manual anchor + an advisor-chosen dense metric (count or cover), optionally scaled by a density model. The automated clear-window index is valid for its window; it is not a substitute for era-specific anchoring where the detector saturates or is out-of-distribution.
 
 ---
 
