@@ -1,0 +1,125 @@
+"""Build a SLICED (tiled) YOLO dataset for dense-worm fine-tuning.
+
+The dense-miss diagnostic (diag_dense_miss_mechanism.py) showed the detector misses small,
+closely-spaced-but-NON-overlapping worms (box IoU ~0) -- the classic small-object regime that
+tiling targets. Inference-only SAHI underdelivered because the model was trained on full frames
+(train/test scale mismatch). This script fixes that by slicing the leakage-safe training frames
+into tiles, so the detector can be fine-tuned at the SAME scale SAHI will later infer at.
+
+Source: datasets/scaleworm_retrain_all/{images,labels}/{train,val} (already day-level leakage-safe
+vs every gate). Each 1920x1080 frame -> overlapping SLICE x SLICE tiles. A GT box is kept in a tile
+when its centre falls in the tile; it is clipped to the tile and dropped if <MIN_KEEP of its area
+survives (avoids teaching half-worms). Positive tiles (>=1 worm) are all kept; a capped fraction of
+empty tiles is kept as negatives to suppress the tile-edge false positives that hurt plain SAHI.
+
+Output: datasets/scaleworm_tiled/{images,labels}/{train,val} + data.yaml.
+Run: python scripts/build_tiled_dataset.py
+"""
+
+from __future__ import annotations
+
+import os
+import random
+from pathlib import Path
+
+from PIL import Image
+
+REPO = Path("/home/jovyan/scaleworm-student-lab")
+SRC = REPO / "datasets" / "scaleworm_retrain_all"
+OUT = REPO / "datasets" / "scaleworm_tiled"
+SLICE = int(os.environ.get("SLICE", "640"))
+OVERLAP = float(os.environ.get("OVERLAP", "0.2"))
+MIN_KEEP = 0.4  # keep a clipped box only if >=40% of its area survives in the tile
+EMPTY_FRAC = 0.15  # keep this many empty tiles (as a fraction of positive tiles) for FP control
+RNG = random.Random(20261006)
+
+
+def tile_origins(total: int, slc: int, overlap: float) -> list[int]:
+    """1-D tile start coords covering [0,total], last tile flush to the edge."""
+    step = max(1, int(slc * (1 - overlap)))
+    xs = list(range(0, max(1, total - slc + 1), step))
+    if not xs or xs[-1] != total - slc:
+        xs.append(max(0, total - slc))
+    return sorted(set(xs))
+
+
+def read_boxes(lp: Path, w: int, h: int) -> list[tuple[float, float, float, float]]:
+    """YOLO label -> pixel (x1,y1,x2,y2)."""
+    out = []
+    for ln in lp.read_text().splitlines():
+        if not ln.strip():
+            continue
+        _, cx, cy, bw, bh = ln.split()
+        cx, cy, bw, bh = float(cx) * w, float(cy) * h, float(bw) * w, float(bh) * h
+        out.append((cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2))
+    return out
+
+
+def tile_label(boxes, ox, oy, slc) -> list[str]:
+    """Clip pixel boxes to a tile at (ox,oy); return YOLO lines in tile-normalized coords."""
+    lines = []
+    for x1, y1, x2, y2 in boxes:
+        cx, cy = (x1 + x2) / 2, (y1 + y2) / 2
+        if not (ox <= cx < ox + slc and oy <= cy < oy + slc):
+            continue  # assign box to the tile its centre lands in
+        cx1, cy1 = max(x1, ox), max(y1, oy)
+        cx2, cy2 = min(x2, ox + slc), min(y2, oy + slc)
+        area_full = (x2 - x1) * (y2 - y1)
+        area_clip = max(0, cx2 - cx1) * max(0, cy2 - cy1)
+        if area_full <= 0 or area_clip / area_full < MIN_KEEP:
+            continue
+        ncx = ((cx1 + cx2) / 2 - ox) / slc
+        ncy = ((cy1 + cy2) / 2 - oy) / slc
+        nw = (cx2 - cx1) / slc
+        nh = (cy2 - cy1) / slc
+        lines.append(f"0 {ncx:.6f} {ncy:.6f} {nw:.6f} {nh:.6f}")
+    return lines
+
+
+def build_split(split: str) -> tuple[int, int]:
+    (OUT / "images" / split).mkdir(parents=True, exist_ok=True)
+    (OUT / "labels" / split).mkdir(parents=True, exist_ok=True)
+    for d in ("images", "labels"):
+        for p in (OUT / d / split).iterdir():
+            p.unlink()
+    pos, empty_candidates = [], []
+    for img_path in sorted((SRC / "images" / split).glob("*")):
+        stem = img_path.stem
+        lp = SRC / "labels" / split / f"{stem}.txt"
+        if not lp.exists():
+            continue
+        im = Image.open(img_path).convert("RGB")
+        w, h = im.size
+        boxes = read_boxes(lp, w, h)
+        for oy in tile_origins(h, SLICE, OVERLAP):
+            for ox in tile_origins(w, SLICE, OVERLAP):
+                lines = tile_label(boxes, ox, oy, SLICE)
+                name = f"{stem}_x{ox}_y{oy}"
+                rec = (im.crop((ox, oy, ox + SLICE, oy + SLICE)), name, lines)
+                (pos if lines else empty_candidates).append(rec)
+    # keep all positives + a capped random sample of empties (negatives)
+    RNG.shuffle(empty_candidates)
+    keep_empty = empty_candidates[: int(len(pos) * EMPTY_FRAC)]
+    for crop, name, lines in pos + keep_empty:
+        crop.save(OUT / "images" / split / f"{name}.png")
+        (OUT / "labels" / split / f"{name}.txt").write_text("\n".join(lines))
+    return len(pos), len(keep_empty)
+
+
+def main() -> None:
+    tr_pos, tr_emp = build_split("train")
+    va_pos, va_emp = build_split("val")
+    (OUT / "data.yaml").write_text(
+        f"# Auto-generated by build_tiled_dataset.py (slice={SLICE} overlap={OVERLAP}).\n"
+        f"# Tiled from scaleworm_retrain_all (leakage-safe). train={tr_pos}+{tr_emp}empty "
+        f"val={va_pos}+{va_emp}empty.\n"
+        f"path: {OUT}\ntrain: images/train\nval: images/val\nnames:\n  0: scale_worm\n"
+    )
+    print(f"slice={SLICE} overlap={OVERLAP}")
+    print(f"train tiles: {tr_pos} positive + {tr_emp} empty = {tr_pos + tr_emp}")
+    print(f"val   tiles: {va_pos} positive + {va_emp} empty = {va_pos + va_emp}")
+    print(f"wrote {OUT}")
+
+
+if __name__ == "__main__":
+    main()
