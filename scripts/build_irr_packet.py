@@ -36,14 +36,28 @@ REPO = Path("/home/jovyan/scaleworm-student-lab")
 SERIES = REPO / "validation/monday_manual_series"
 MANIFEST = SERIES / "frame_manifest.csv"
 IMAGES = SERIES / "images"
-OUT_DIR = REPO / "validation/irr_round_2/packets"
 
-# IRR frame selection: the low-abundance and peak Mondays chosen with Makayla.
-# Only Mondays that are actually sorted+counted in the series are listed here.
-PERIODS = {
-    "low_jan2022": ["20220117", "20220131"],
-    "peak_jan2023": ["20230109", "20230116", "20230123"],
+# Which IRR round this build targets (selects frame set + output dir).
+ROUND = "round3"
+
+# IRR frame sets per round: low-abundance + peak Mondays chosen with Makayla.
+# Only Mondays actually sorted+counted in the series are listed. Dates are FRESH
+# per round so raters never re-see frames (round-3 days don't overlap round-2).
+# round3 = clean 3-way (MJ/MS/LG) all blind from_scratch, clear-era low+peak,
+# peaks pushed higher than round2 (where the ~2x disagreement should show).
+ROUNDS = {
+    "round2": {
+        "low_jan2022": ["20220117", "20220131"],
+        "peak_jan2023": ["20230109", "20230116", "20230123"],
+    },
+    "round3": {
+        "low_2022": ["20220214", "20220411"],
+        "peak_fall2022": ["20221121", "20221205", "20221226"],
+    },
 }
+PERIODS = ROUNDS[ROUND]
+# dir matches the existing round-2 layout: round3 -> validation/irr_round_3/
+OUT_DIR = REPO / f"validation/irr_{ROUND.replace('round', 'round_')}/packets"
 SLOTS_PER_DAY = 4  # cap per day, evenly spaced across the available 3-hourly slots
 
 

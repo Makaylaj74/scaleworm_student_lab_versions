@@ -59,3 +59,6 @@ datasets/scaleworm_retrain_clear/
 datasets/scaleworm_v6_early2015/
 datasets/scaleworm_v6_blurry/
 datasets/scaleworm_v6_scale_n*/
+
+# IRR round-3 packets (regenerable from scripts/build_irr_packet.py; images+zips)
+validation/irr_round_3/packets/
