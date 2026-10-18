@@ -1,0 +1,9 @@
+    ep   0  loss   0.2017
+    ep  10  loss   0.0961
+    ep  20  loss   0.0680
+    ep  30  loss   0.0535
+    ep  39  loss   0.0459
+
+saved deploy model -> /home/jovyan/scaleworm-student-lab/notebooks/csrnet_ft2015_run/best_ft2015.pt
+clear-val MAE 2.89 (base 2.12; degraded as expected, clear model handles 2021-24)
+in-sample 2015 ratio 1.01x (training fit, NOT held-out; cite CV 0.61x for honest OOD performance)
