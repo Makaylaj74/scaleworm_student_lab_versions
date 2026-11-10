@@ -157,7 +157,8 @@ except ModuleNotFoundError:
     )'''
 
 
-def _config_source(rater: str) -> str:
+def _config_source(rater: str, packet: str | None = None) -> str:
+    packet = packet or f"irr_packet_{rater}"
     return f'''%matplotlib widget
 import csv
 import statistics
@@ -172,8 +173,8 @@ from matplotlib.collections import PatchCollection
 from IPython.display import display
 
 # If you unzipped the packet somewhere other than your home directory,
-# edit this ONE line to point at the unzipped irr_packet_{rater} folder.
-ROOT = Path.home() / "irr_packet_{rater}"
+# edit this ONE line to point at the unzipped {packet} folder.
+ROOT = Path.home() / "{packet}"
 
 IMAGES = ROOT / "frames"
 LABELS = ROOT / "labels"

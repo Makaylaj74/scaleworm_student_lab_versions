@@ -62,3 +62,6 @@ datasets/scaleworm_v6_scale_n*/
 
 # IRR round-3 packets (regenerable from scripts/build_irr_packet.py; images+zips)
 validation/irr_round_3/packets/
+# IRR round-4 triplet packets + frame cache (regenerable from scripts/build_irr_triplet_packet.py)
+validation/irr_round_4/packets/
+validation/irr_round_4/frames/
