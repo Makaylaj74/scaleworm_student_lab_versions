@@ -122,7 +122,7 @@ def test_build_packet_end_to_end(tmp_path):
     cache.mkdir()
     rows = bt.triplet_rows([_row("CAM-A")], FIELDS)
     for r in rows:
-        _write_rgb(cache / f"{r['frame_id']}.png", np.zeros((8, 8)))
+        _write_rgb(bt.cached(r, cache), np.zeros((8, 8)))
     zp = bt.build_packet("MS", rows, FIELDS, tmp_path, cache=cache)
     pkt = tmp_path / "irr_packet_MS_round4"
     assert sorted(p.name for p in (pkt / "frames").iterdir()) == sorted(

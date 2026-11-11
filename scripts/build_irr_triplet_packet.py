@@ -82,6 +82,8 @@ SEEN_SOURCES = [
 SCENE_CHECK = bip.REPO / "scene_sorting/irr_round4_scene_check"
 EXEMPT = [OUT_DIR, SCENE_CHECK]
 N_PER_QUANTILE = 4
+# MJ's time first, then +/-10 s (still inside the 30 s contact-sheet tile she chose).
+NUDGES_S = (0, -10, 10)
 STEM_RE = re.compile(r"CAMHDA301-(20\d{6})T\d{6}")
 QUANTILES = (0.1, 0.3, 0.5, 0.7, 0.9)
 MIN_SHARP_RATIO = 0.5
@@ -204,11 +206,16 @@ def sharpness(gray: np.ndarray, n: int = 3) -> float:
     )
 
 
+def cached(row: dict, cache: Path = FRAME_CACHE) -> Path:
+    """Cache path keyed on frame id AND video time (a stem can be tried at several times)."""
+    return cache / f"{row['frame_id']}_at{float(row['scene1_time_s']):g}s.png"
+
+
 def extract(rows: list[dict], cache: Path = FRAME_CACHE) -> None:
     """Extract every listed frame into the cache (skips ones already there)."""
     cache.mkdir(parents=True, exist_ok=True)
     for r in rows:
-        out = cache / f"{r['frame_id']}.png"
+        out = cached(r, cache)
         if not out.exists() and not extract_frame(
             Path(r["video_path"]), float(r["scene1_time_s"]), out
         ):
@@ -239,7 +246,7 @@ def qc_rows(rows: list[dict], cache: Path = FRAME_CACHE) -> list[tuple[str, bool
     out = []
     for k in range(0, len(rows), 3):
         trip = rows[k : k + 3]
-        ok, msg = check_triplet([cache / f"{r['frame_id']}.png" for r in trip])
+        ok, msg = check_triplet([cached(r, cache) for r in trip])
         out.append((trip[1]["frame_id"].rsplit("_dt", 1)[0], ok, msg))
     return out
 
@@ -262,15 +269,42 @@ def scene_candidates(rows: list[dict], excluded_days: set[str]) -> list[dict]:
     return out
 
 
-def build_scene_sheets(cands: list[dict], session: Path = SCENE_CHECK) -> None:
+def more_candidates(
+    rows: list[dict],
+    excluded_days: set[str],
+    q: int,
+    n: int,
+    session: Path = SCENE_CHECK,
+) -> list[dict]:
+    """n further candidates for quantile q: new months first, then any unused day."""
+    have = list(csv.DictReader((session / "candidates.csv").open()))
+    months = {c["stem"][10:16] for c in have}
+    days = {c["stem"][10:18] for c in have}
+    ranked = anchor_candidates(rows, excluded_days)[q]
+    ranked = sorted(ranked, key=lambda c: c["frame_id"][10:16] in months)  # stable
+    out = []
+    for c in ranked:
+        if c["frame_id"][10:18] not in days:
+            days.add(c["frame_id"][10:18])
+            out.append({**c, "quantile": q})
+            if len(out) == n:
+                break
+    return out
+
+
+def build_scene_sheets(
+    cands: list[dict], session: Path = SCENE_CHECK, append: bool = False
+) -> None:
     """Contact sheets + manifest in the scene_sorter layout (no density written)."""
     sheets = session / "contact_sheets"
     sheets.mkdir(parents=True, exist_ok=True)
-    with (session / "manifest.csv").open("w", newline="") as fh:
+    mode = "a" if append else "w"
+    with (session / "manifest.csv").open(mode, newline="") as fh:
         w = csv.writer(fh)
-        w.writerow(
-            ["stem", "datetime_utc", "recording_date", "sheet_path", "video_path"]
-        )
+        if not append:
+            w.writerow(
+                ["stem", "datetime_utc", "recording_date", "sheet_path", "video_path"]
+            )
         for c in cands:
             w.writerow(
                 [
@@ -281,9 +315,10 @@ def build_scene_sheets(cands: list[dict], session: Path = SCENE_CHECK) -> None:
                     c["video_path"],
                 ]
             )
-    with (session / "candidates.csv").open("w", newline="") as fh:
+    with (session / "candidates.csv").open(mode, newline="") as fh:
         w = csv.writer(fh)
-        w.writerow(["stem", "quantile"])
+        if not append:
+            w.writerow(["stem", "quantile"])
         w.writerows((c["frame_id"], c["quantile"]) for c in cands)
     for c in cands:
         out = sheets / f"{c['frame_id']}.png"
@@ -292,24 +327,34 @@ def build_scene_sheets(cands: list[dict], session: Path = SCENE_CHECK) -> None:
         print(f"  sheet {c['frame_id']}")
 
 
+def first_passing(stem: str, t: float, fieldnames: list[str]) -> dict | None:
+    """The chosen time, else a NUDGES_S shift of it (stays inside the 30 s sheet tile)."""
+    for nudge in NUDGES_S:
+        a = {
+            "frame_id": stem,
+            "scene1_time_s": f"{t + nudge:g}",
+            "video_path": str(stem_to_video(stem, VIDEO_ROOT)),
+        }
+        [(fid, ok, msg)] = qc_rows(triplet_rows([a], fieldnames))
+        print(f"    {'PASS' if ok else 'fail'} {fid} @{t + nudge:g}s: {msg}")
+        if ok:
+            return a
+    return None
+
+
 def pick_anchors(fieldnames: list[str], session: Path = SCENE_CHECK) -> list[dict]:
     """Per quantile, the first Scene-1-sorted candidate whose triplet passes QC."""
     log = {r["stem"]: r for r in csv.DictReader((session / "sort_log.csv").open())}
     cands = list(csv.DictReader((session / "candidates.csv").open()))
     picked = []
     for q in sorted({c["quantile"] for c in cands}, key=int):
+        print(f"  q{q}")
         for c in (c for c in cands if c["quantile"] == q):
             d = log.get(c["stem"])
             if d is None or d["decision"] != "scene1":
                 continue
-            a = {
-                "frame_id": c["stem"],
-                "scene1_time_s": d["scene1_time_s"],
-                "video_path": str(stem_to_video(c["stem"], VIDEO_ROOT)),
-            }
-            [(fid, ok, msg)] = qc_rows(triplet_rows([a], fieldnames))
-            print(f"  q{q} {'PASS' if ok else 'fail'} {fid}: {msg}")
-            if ok:
+            a = first_passing(c["stem"], float(d["scene1_time_s"]), fieldnames)
+            if a:
                 picked.append(a)
                 break
         else:
@@ -436,7 +481,7 @@ def build_packet(
     (pkt / "frames").mkdir(parents=True)
     (pkt / "labels").mkdir()
     for r in rows:
-        shutil.copy2(cache / f"{r['frame_id']}.png", pkt / "frames")
+        shutil.copy2(cached(r, cache), pkt / "frames" / f"{r['frame_id']}.png")
     with (pkt / "irr_manifest.csv").open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fieldnames)
         w.writeheader()
@@ -467,6 +512,13 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="write candidate contact sheets for the scene check",
     )
+    ap.add_argument(
+        "--more",
+        nargs=2,
+        type=int,
+        metavar=("Q", "N"),
+        help="append N more scene-check sheets for quantile index Q",
+    )
     ap.add_argument("--pick", action="store_true", help="print the anchor selection")
     ap.add_argument("--out", type=Path, default=OUT_DIR / "packets")
     args = ap.parse_args(argv)
@@ -477,12 +529,18 @@ def main(argv: list[str] | None = None) -> None:
     if args.scene_sheets:
         build_scene_sheets(scene_candidates(harvest_rows(), excluded))
         return
+    if args.more:
+        q, n = args.more
+        build_scene_sheets(more_candidates(harvest_rows(), excluded, q, n), append=True)
+        return
     if args.pick:
         for r in pick_anchors(fieldnames):
             print(f'    ("{r["frame_id"]}", {r["scene1_time_s"]}),')
         return
     if not ANCHORS:
-        raise SystemExit("ANCHORS is empty: run --scene-sheets, scene-check, --pick first")
+        raise SystemExit(
+            "ANCHORS is empty: run --scene-sheets, scene-check, --pick first"
+        )
     leaked = [a for a, _ in ANCHORS if a.split("-")[1][:8] in excluded]
     if leaked:
         raise RuntimeError(f"anchors on already-annotated days: {leaked}")
