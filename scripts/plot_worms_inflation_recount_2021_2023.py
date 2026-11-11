@@ -8,9 +8,12 @@ really low), with the automated density-head index kept as context.
         - Sep-Dec 2021: blind recount under the confirmed counting rule
           (validation/recount_sepdec_2021_rest; notebooks/worm_counting_rule.md)
         - 2022 - Aug 2023: original Monday series (blind 2022-24 recount = 0.95x)
-        - Jan-Aug 2021: counted under the earlier BROAD criterion -> plotted hollow,
-          provisional until recounted under the rule
-        - automated density-head index (gray) for context
+        - Jan-Aug 2021: the 2026-11-11 counts used an earlier broad criterion (2.35x
+          the rule on matched Mondays) -> EXCLUDED for method mismatch; the period is
+          shaded "recount pending" and filled from validation/recount_janaug_2021
+          (8 frames, 1/month, under the rule) as soon as those are counted
+        - automated density-head index (gray) for context, Sep 2021 on only (Jan-Aug
+          2021 is a documented detector/frame-finder undercount)
     (b) caldera uplift (OOI BOTPT) re-referenced to the first two weeks of Jan 2021
     (c) earthquakes per week above Mc (UW Axial cabled-array catalog)
 
@@ -32,7 +35,7 @@ NB = REPO / "notebooks"
 VAL = REPO / "validation"
 MAIN = VAL / "monday_manual_series/frame_manifest.csv"
 SEPDEC = VAL / "recount_sepdec_2021_rest/frame_manifest.csv"
-JANAUG = VAL / "monday_janaug_2021/frame_manifest.csv"
+JANAUG = VAL / "recount_janaug_2021/frame_manifest.csv"
 AUTO = NB / "hybrid_series_2015_2024.csv"
 INFLATION = NB / "axial_inflation_weekly_2017_2024.csv"
 SEISMICITY = NB / "axial_seismicity_weekly_2017_2024.csv"
@@ -43,13 +46,7 @@ RULE_START = pd.Timestamp("2021-09-01")  # first week counted under the confirme
 REF_WEEKS = 2
 
 # Okabe-Ito
-BLUE, ORANGE, VERMILLION, GREEN, GRAY = (
-    "#0072B2",
-    "#E69F00",
-    "#D55E00",
-    "#009E73",
-    "#7F7F7F",
-)
+BLUE, VERMILLION, GREEN, GRAY = "#0072B2", "#D55E00", "#009E73", "#7F7F7F"
 # Presentation tier: title >=20, axis >=14, ticks >=12, lines >=1.5, dpi >=150
 TITLE_PT, AXIS_PT, TICK_PT, PANEL_PT, LW = 20, 14, 12, 14, 1.8
 
@@ -58,22 +55,20 @@ CAPTION = (
     "(ASHES, Axial Seamount) in clear OOI CAMHD footage, Jan 2021–Aug 2023, beside the "
     "re-inflation of Axial's caldera. (a) Worms per frame: weekly (Monday) mean ± 1 SEM "
     "across that Monday's Scene-1 recordings (CAMHDA301, 3-hourly slots), box-corrected "
-    "by M. Joseph. Blue = counted under the confirmed rule (notebooks/"
-    "worm_counting_rule.md): Sep–Dec 2021 from the Nov 2026 blind recount (48 frames; "
-    "1.24× the original Sep 2026 pass), 2022–Aug 2023 from the original Monday series "
-    "(a blind 2022–24 recount agreed, 0.95× [95% CI 0.77–1.19]). Hollow orange = "
-    "Jan–Aug 2021 (45 frames, 3 slots per Monday), counted under an earlier broader "
-    "criterion that also boxed dark openings; provisional and likely high (the same "
-    "criterion read 2.35× the rule on matched Sep–Dec 2021 Mondays) until recounted. "
-    "Gray = automated CSRNet density-head index (÷0.96 to hand-count level; Mon–Fri; "
-    "hybrid_series_2015_2024.csv), shown for context. (b) Seafloor uplift at the Central "
-    "Caldera BOTPT (OOI RS03CCAL-MJ03F-05-BOTPTA301, de-tided daily depth, weekly mean) "
-    "relative to the first two weeks of Jan 2021. (c) Earthquakes per week with M ≥ 0.25 "
-    "(magnitude of completeness) from the UW Axial cabled-array catalog (Wilcock et al. "
-    "2016). Gaps = weeks with no data. Under the rule, worms ran ~13 per frame in late "
-    "2021, similar to early 2022, rose to a late-2022 peak, and fell by mid-2023: there is "
-    "no low in late 2021. Whether Jan–Aug 2021 was low cannot be judged until it is "
-    "recounted. No correlation with uplift or seismicity is tested here."
+    "by M. Joseph under one counting rule (notebooks/worm_counting_rule.md): Sep–Dec 2021 "
+    "from the Nov 2026 blind recount (48 frames), 2022–Aug 2023 from the original Monday "
+    "series (a blind 2022–24 recount agreed, 0.95× [95% CI 0.77–1.19]). Jan–Aug 2021 "
+    "(shaded) is excluded: those frames were first counted under an earlier, broader "
+    "criterion that also boxed empty dark openings (2.35× the rule on matched Sep–Dec 2021 "
+    "Mondays); a recount under the rule is pending. Gray = automated CSRNet density-head "
+    "index (÷0.96 to hand-count level; Mon–Fri; hybrid_series_2015_2024.csv), shown for "
+    "context from Sep 2021 only. (b) Seafloor uplift at the Central Caldera BOTPT (OOI "
+    "RS03CCAL-MJ03F-05-BOTPTA301, de-tided daily depth, weekly mean) relative to the first "
+    "two weeks of Jan 2021. (c) Earthquakes per week with M ≥ 0.25 (magnitude of "
+    "completeness) from the UW Axial cabled-array catalog (Wilcock et al. 2016). Gaps = "
+    "weeks with no data. Worms ran ~13 per frame in late 2021, similar to early 2022, rose "
+    "to a late-2022 peak, and fell by mid-2023: there is no low in late 2021. No "
+    "correlation with uplift or seismicity is tested here."
 )
 
 
@@ -96,15 +91,16 @@ def on_weeks(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def load() -> dict[str, pd.DataFrame]:
+    parts = [weekly(JANAUG, START, RULE_START)] if JANAUG.exists() else []
     rule = pd.concat(
-        [
+        parts
+        + [
             weekly(SEPDEC, RULE_START, START + pd.DateOffset(years=1)),
             weekly(MAIN, pd.Timestamp("2022-01-01"), END),
         ]
     )
-    broad = weekly(JANAUG, START, RULE_START)
     auto = pd.read_csv(AUTO, parse_dates=["date"])
-    auto = auto[(auto.model == "best.pt") & auto.date.between(START, END)]
+    auto = auto[(auto.model == "best.pt") & auto.date.between(RULE_START, END)]
     inf = pd.read_csv(INFLATION, parse_dates=["week_start"]).set_index("week_start")
     inf = inf.loc[START:END].copy()
     inf["uplift_window_cm"] = (
@@ -113,7 +109,7 @@ def load() -> dict[str, pd.DataFrame]:
     seis = pd.read_csv(SEISMICITY, parse_dates=["week_start"]).set_index("week_start")
     return {
         "rule": on_weeks(rule),
-        "broad": on_weeks(broad),
+        "janaug_n": int(rule.loc[:RULE_START, "size"].sum()),
         "auto": auto.set_index("date"),
         "inf": inf,
         "seis": seis.loc[START:END],
@@ -165,24 +161,22 @@ def draw(with_caption: bool) -> plt.Figure:
         ms=4,
         label="Hand count, confirmed rule (± 1 SEM)",
     )
-    b = d["broad"]
-    ax.errorbar(
-        b.index,
-        b["mean"],
-        yerr=b["sem"],
-        fmt="o",
-        ms=6,
-        mfc="white",
-        mec=ORANGE,
-        mew=1.8,
-        ecolor=ORANGE,
-        elinewidth=1.5,
-        capsize=0,
-        label="Jan–Aug 2021, broad criterion (provisional)",
-    )
-    ax.axvline(RULE_START, color="k", ls=":", lw=1.5)
+    if d["janaug_n"] < 8:  # shade until the 8-frame rule recount is complete
+        ax.axvspan(
+            START - (END - START) * 0.03, RULE_START, color=GRAY, alpha=0.15, lw=0
+        )
+        ax.text(
+            START + (RULE_START - START) / 2,
+            22,
+            "Jan–Aug 2021\nrecount under\nrule pending",
+            ha="center",
+            va="center",
+            fontsize=TICK_PT,
+            fontweight="bold",
+            color="#4D4D4D",
+        )
     ax.set_ylabel("Worms\n(per frame)", fontsize=AXIS_PT, fontweight="bold")
-    ax.set_ylim(0, 62)
+    ax.set_ylim(0, 56)
     ax.legend(
         loc="upper right",
         fontsize=TICK_PT - 1,
@@ -224,14 +218,6 @@ def draw(with_caption: bool) -> plt.Figure:
         )
         if i < 2:
             ax.tick_params(labelbottom=False)
-    axes[0].text(
-        RULE_START + pd.Timedelta(days=6),
-        59,
-        "confirmed rule →",
-        fontsize=TICK_PT - 1,
-        fontweight="bold",
-        va="top",
-    )
     axes[2].xaxis.set_major_locator(mdates.MonthLocator(bymonth=(1, 4, 7, 10)))
     axes[2].xaxis.set_major_formatter(mdates.DateFormatter("%b\n%Y"))
     axes[2].set_xlabel("Date (weekly, UTC)", fontsize=AXIS_PT, fontweight="bold")
