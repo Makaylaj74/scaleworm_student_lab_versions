@@ -1,13 +1,13 @@
 letter,frame_id,scene1_time_s,same_view,notes
-A,CAMHDA301-20190429T211500,450,,
-B,CAMHDA301-20190715T211500,780,,
-C,CAMHDA301-20201123T061500,420,,
-D,CAMHDA301-20200907T031500,420,,
-E,CAMHDA301-20190325T091500,450,,
-F,CAMHDA301-20190204T151500,450,,
-G,CAMHDA301-20190610T091500,270,,
-H,CAMHDA301-20201012T181500,450,,
-I,CAMHDA301-20200824T121500,780,,
-J,CAMHDA301-20201228T001500,450,,
-K,CAMHDA301-20201005T121500,450,,
-L,CAMHDA301-20190506T121500,450,,
+A,CAMHDA301-20190429T211500,450,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+B,CAMHDA301-20190715T211500,780,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+C,CAMHDA301-20201123T061500,420,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+D,CAMHDA301-20200907T031500,420,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+E,CAMHDA301-20190325T091500,450,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+F,CAMHDA301-20190204T151500,450,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+G,CAMHDA301-20190610T091500,270,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+H,CAMHDA301-20201012T181500,450,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+I,CAMHDA301-20200824T121500,780,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+J,CAMHDA301-20201228T001500,450,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+K,CAMHDA301-20201005T121500,450,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
+L,CAMHDA301-20190506T121500,450,n,MJ 2026-11-11: none of the 12 is the same view as the 2021 Scene-1 references
