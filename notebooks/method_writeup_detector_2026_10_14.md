@@ -101,6 +101,17 @@ Detection quality is scored by **point-match** recall / precision (greedy center
     - Day-level r improves from 0.42 to 0.58 (49 days; Δr +0.16 [−0.07, 0.40]).
     - The count ratio there is 0.67×, which is the density ceiling on dense 2022 Tuesdays rather than frame choice.
   - The Tuesday sort begins Sep 2021, so Jan–Aug 2021 is validated on Mondays only.
+  - **Full index built (Nov 2026; `scripts/build_era_time_index_2021_2023.py`, 5 354 clear Mon–Fri recordings → 135 weeks).**
+    - *Weekly agreement with hand counts* (bootstrap over weeks; `scripts/plot_era_index_vs_hand_2021_2023.py`):
+      - All weeks: 1.02× [0.96, 1.08], r = 0.71 [0.57, 0.81], n = 108. The old index gave 0.89× and r = 0.42.
+      - Sep 2021–Aug 2023: 1.08× [1.03, 1.14], r = 0.78 [0.66, 0.87], n = 87. The old index gave r = 0.61.
+      - Jan–Aug 2021: 0.81× [0.72, 0.92], r = 0.52 [0.08, 0.78], n = 21. The old index gave 0.52×.
+      - Late-2022 peak: 0.93×; the old index gave 0.76×.
+    - *Residual biases:*
+      - Early 2021 still reads about 20% low.
+      - Sparse quarters read high (2022 Q1 1.22×), because the off-scene cutoff also drops genuinely sparse Scene-1 frames.
+      - Jan–May 2023, where the higher of two candidate times is kept, reads 1.27× against 1.03× for the rest of Sep 2021–Aug 2023.
+    - *Status:* the index tracks timing and relative change well, but it is not an absolute count.
   - *Provenance:* `scripts/era_finder_*.py` (density reads) and `scripts/era_finder_score.py` (every number above). Outputs are in `validation/era_time_finder/`.
 
 ---
