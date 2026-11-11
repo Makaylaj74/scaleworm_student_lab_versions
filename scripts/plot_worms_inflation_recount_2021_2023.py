@@ -12,8 +12,9 @@ really low), with the automated density-head index kept as context.
           mismatch); plotted instead is the blind recount under the rule
           (validation/recount_janaug_2021 8-frame sample + _rest 37 frames = 43 counted,
           2 blur). Shaded "recount pending" only while the 8-frame sample is unscored.
-        - automated density-head index (gray) for context, Sep 2021 on only (Jan-Aug
-          2021 is a documented detector/frame-finder undercount)
+        - automated era-time index (gray) for context, Jan 2021 - 10 Aug 2023
+          (build_era_time_index_2021_2023.py; replaces the max-over-grid density index,
+          which under-read Jan-Aug 2021 at ~0.5x hand counts)
     (b) caldera uplift (OOI BOTPT) re-referenced to the first two weeks of Jan 2021
     (c) earthquakes per week above Mc (UW Axial cabled-array catalog)
 
@@ -37,7 +38,8 @@ MAIN = VAL / "monday_manual_series/frame_manifest.csv"
 SEPDEC = VAL / "recount_sepdec_2021_rest/frame_manifest.csv"
 JANAUG = VAL / "recount_janaug_2021/frame_manifest.csv"
 JANAUG_REST = VAL / "recount_janaug_2021_rest/frame_manifest.csv"
-AUTO = NB / "hybrid_series_2015_2024.csv"
+AUTO = NB / "era_time_index_2021_2023/era_time_index_weekly_2021_2023.csv"
+CLEAR_END = pd.Timestamp("2023-08-10")  # last clear-footage recording in the index
 INFLATION = NB / "axial_inflation_weekly_2017_2024.csv"
 SEISMICITY = NB / "axial_seismicity_weekly_2017_2024.csv"
 OUT = NB / "figure_worms_inflation_recount_2021_2023"
@@ -61,9 +63,11 @@ CAPTION = (
     "2021 (48 frames, 14 Mondays) are Nov 2026 blind recounts; 2022–Aug 2023 is the "
     "original Monday series (a blind 2022–24 recount agreed, 0.95× [95% CI 0.77–1.19]). "
     "Earlier Jan–Aug 2021 counts made under a broader criterion that also boxed empty dark "
-    "openings are not shown. Gray = automated CSRNet density-head index (÷0.96 to "
-    "hand-count level; Mon–Fri; hybrid_series_2015_2024.csv), shown for context from Sep "
-    "2021 only. (b) Seafloor uplift at the Central Caldera BOTPT (OOI "
+    "openings are not shown. Gray = automated index for context: CSRNet density head "
+    "(÷0.96) read once per Mon–Fri recording at the camera-schedule era's Scene-1 time, "
+    "off-scene recordings (< 8.5) dropped, weekly mean of day means, to 10 Aug 2023 "
+    "(era_time_index_weekly_2021_2023.csv; vs hand counts 1.02× [0.96–1.08], weekly r = "
+    "0.71, reading ~0.8× in Jan–Aug 2021 and high in sparse weeks). (b) Seafloor uplift at the Central Caldera BOTPT (OOI "
     "RS03CCAL-MJ03F-05-BOTPTA301, de-tided daily depth, weekly mean) relative to the first "
     "two weeks of Jan 2021. (c) Earthquakes per week with M ≥ 0.25 (magnitude of "
     "completeness) from the UW Axial cabled-array catalog (Wilcock et al. 2016). Gaps = "
@@ -110,8 +114,8 @@ def load() -> dict[str, pd.DataFrame]:
             weekly([MAIN], pd.Timestamp("2022-01-01"), END),
         ]
     )
-    auto = pd.read_csv(AUTO, parse_dates=["date"])
-    auto = auto[(auto.model == "best.pt") & auto.date.between(RULE_START, END)]
+    auto = pd.read_csv(AUTO, parse_dates=["week"]).set_index("week")
+    auto = on_weeks(auto[auto.index <= CLEAR_END])
     inf = pd.read_csv(INFLATION, parse_dates=["week_start"]).set_index("week_start")
     inf = inf.loc[START:END].copy()
     inf["uplift_window_cm"] = (
@@ -121,7 +125,7 @@ def load() -> dict[str, pd.DataFrame]:
     return {
         "rule": on_weeks(rule),
         "janaug_pending": janaug_pending(),
-        "auto": auto.set_index("date"),
+        "auto": auto,
         "inf": inf,
         "seis": seis.loc[START:END],
     }
