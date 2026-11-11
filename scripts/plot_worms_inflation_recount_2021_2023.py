@@ -10,8 +10,8 @@ really low), with the automated density-head index kept as context.
         - 2022 - Aug 2023: original Monday series (blind 2022-24 recount = 0.95x)
         - Jan-Aug 2021: the 2026-11-11 broad-criterion counts are EXCLUDED (method
           mismatch); plotted instead is the blind recount under the rule
-          (validation/recount_janaug_2021, 1 frame/month, 7 counted + 1 blur). The
-          period is shaded "recount pending" only while any packet frame is unscored.
+          (validation/recount_janaug_2021 8-frame sample + _rest 37 frames = 43 counted,
+          2 blur). Shaded "recount pending" only while the 8-frame sample is unscored.
         - automated density-head index (gray) for context, Sep 2021 on only (Jan-Aug
           2021 is a documented detector/frame-finder undercount)
     (b) caldera uplift (OOI BOTPT) re-referenced to the first two weeks of Jan 2021
@@ -55,21 +55,24 @@ CAPTION = (
     "AI-generated caption (Claude, Anthropic) — Hand-counted scale worms at Mushroom vent "
     "(ASHES, Axial Seamount) in clear OOI CAMHD footage, Jan 2021–Aug 2023, beside the "
     "re-inflation of Axial's caldera. (a) Worms per frame: weekly (Monday) mean ± 1 SEM "
-    "across that Monday's Scene-1 recordings (CAMHDA301, 3-hourly slots), box-corrected "
-    "by M. Joseph under one counting rule (notebooks/worm_counting_rule.md): Jan–Aug 2021 "
-    "from a Nov 2026 blind recount of one frame per month (7 counted, 1 too blurred; "
-    "single frames, so no SEM band), Sep–Dec 2021 from the Nov 2026 blind recount (48 "
-    "frames), 2022–Aug 2023 from the original Monday series (a blind 2022–24 recount "
-    "agreed, 0.95× [95% CI 0.77–1.19]). Earlier Jan–Aug 2021 counts made under a broader "
-    "criterion that also boxed empty dark openings are not shown. Gray = automated CSRNet density-head "
-    "index (÷0.96 to hand-count level; Mon–Fri; hybrid_series_2015_2024.csv), shown for "
-    "context from Sep 2021 only. (b) Seafloor uplift at the Central Caldera BOTPT (OOI "
+    "across that Monday's Scene-1 recordings (CAMHDA301, 3-hourly slots; Mondays with one "
+    "frame have no band), box-corrected by M. Joseph under one counting rule "
+    "(notebooks/worm_counting_rule.md). Jan–Aug 2021 (43 frames, 21 Mondays) and Sep–Dec "
+    "2021 (48 frames, 14 Mondays) are Nov 2026 blind recounts; 2022–Aug 2023 is the "
+    "original Monday series (a blind 2022–24 recount agreed, 0.95× [95% CI 0.77–1.19]). "
+    "Earlier Jan–Aug 2021 counts made under a broader criterion that also boxed empty dark "
+    "openings are not shown. Gray = automated CSRNet density-head index (÷0.96 to "
+    "hand-count level; Mon–Fri; hybrid_series_2015_2024.csv), shown for context from Sep "
+    "2021 only. (b) Seafloor uplift at the Central Caldera BOTPT (OOI "
     "RS03CCAL-MJ03F-05-BOTPTA301, de-tided daily depth, weekly mean) relative to the first "
     "two weeks of Jan 2021. (c) Earthquakes per week with M ≥ 0.25 (magnitude of "
     "completeness) from the UW Axial cabled-array catalog (Wilcock et al. 2016). Gaps = "
-    "weeks with no data. Under the rule, Jan–Aug 2021 averaged 19.7 worms per frame (95% CI "
-    "13.1–26.6; n = 7), Sep–Dec 2021 13.2, similar to early 2022; counts rose to a "
-    "late-2022 peak and fell by mid-2023. There is no early-2021 low. No correlation with uplift or seismicity is tested here."
+    "weeks with no data. Under the rule, Jan–Aug 2021 averaged 19.8 worms per frame (95% "
+    "CI 17.0–22.9), above Sep–Dec 2021 at 13.2 (12.0–14.4; difference +6.7, 3.5–9.9; "
+    "bootstrap over Mondays, 10,000 resamples, seed 0, percentile), rising to ~28 in July "
+    "before falling to early-2022 levels; counts peaked again in late 2022 and fell by "
+    "mid-2023. There is no early-2021 low. No correlation with uplift or seismicity is "
+    "tested here."
 )
 
 
