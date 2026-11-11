@@ -47,7 +47,7 @@ A human clicks the centre of each worm (a point, not a box). These are a *differ
 | Early-2021 handcount | 4 | Jan–Aug 2021 undercount test |
 
 ### 2c. Annotation reliability (inter-rater, in progress)
-A second annotator (Rater B) independently box-counted a 20-frame packet (Jan-2022 low vs Jan-2023 peak). Against Makayla's counts she tracks the frame-to-frame pattern well (Pearson r = 0.74) but marks systematically fewer worms (≈9.5 vs 16.2/frame; ICC 0.38). This interim comparison is **confounded** — Makayla's reference labels were detector-seeded then corrected, while Rater B counted from a blank frame — so Makayla is now re-counting the same frames blind for a clean, like-for-like reliability estimate. A third rater (Rater C) is outstanding.
+A second annotator (Rater B) independently box-counted a 20-frame packet (Jan-2022 low vs Jan-2023 peak). Against Makayla's counts, Rater B tracks the frame-to-frame pattern well (Pearson r = 0.74) but marks systematically fewer worms (≈9.5 vs 16.2/frame; ICC 0.38). This interim comparison is **confounded** — Makayla's reference labels were detector-seeded then corrected, while Rater B counted from a blank frame — so Makayla is now re-counting the same frames blind for a clean, like-for-like reliability estimate. A third rater (Rater C) is outstanding.
 
 ---
 

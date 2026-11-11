@@ -1,3 +1,5 @@
+*AI-generated draft (Claude, Anthropic) — for review. All parameters and figures are derived from version-controlled scripts and data.*
+
 Two Jan-Jul 2021 box-labeled frames pulled from train/ on 2026-10-05 because their
 DAY collides with countable early_2021_handcount gate frames (day-level leakage rule):
   20210216T001500  <- gate 20210216T061500 (20 worms)
