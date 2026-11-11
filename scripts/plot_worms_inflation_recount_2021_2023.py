@@ -36,6 +36,7 @@ VAL = REPO / "validation"
 MAIN = VAL / "monday_manual_series/frame_manifest.csv"
 SEPDEC = VAL / "recount_sepdec_2021_rest/frame_manifest.csv"
 JANAUG = VAL / "recount_janaug_2021/frame_manifest.csv"
+JANAUG_REST = VAL / "recount_janaug_2021_rest/frame_manifest.csv"
 AUTO = NB / "hybrid_series_2015_2024.csv"
 INFLATION = NB / "axial_inflation_weekly_2017_2024.csv"
 SEISMICITY = NB / "axial_seismicity_weekly_2017_2024.csv"
@@ -72,9 +73,9 @@ CAPTION = (
 )
 
 
-def weekly(manifest: Path, lo: pd.Timestamp, hi: pd.Timestamp) -> pd.DataFrame:
-    """Per-Monday mean and SEM of counted Scene-1 frames in [lo, hi)."""
-    m = pd.read_csv(manifest)
+def weekly(manifests: list[Path], lo: pd.Timestamp, hi: pd.Timestamp) -> pd.DataFrame:
+    """Per-Monday mean and SEM of counted Scene-1 frames in [lo, hi), pooled across files."""
+    m = pd.concat([pd.read_csv(p) for p in manifests if p.exists()])
     m = m[m.frame_status == "counted"].copy()
     m["date"] = pd.to_datetime(m.frame_id.str[10:18])
     m = m[(m.date >= lo) & (m.date < hi)]
@@ -99,12 +100,11 @@ def janaug_pending() -> bool:
 
 
 def load() -> dict[str, pd.DataFrame]:
-    parts = [weekly(JANAUG, START, RULE_START)] if JANAUG.exists() else []
     rule = pd.concat(
-        parts
-        + [
-            weekly(SEPDEC, RULE_START, START + pd.DateOffset(years=1)),
-            weekly(MAIN, pd.Timestamp("2022-01-01"), END),
+        [
+            weekly([JANAUG, JANAUG_REST], START, RULE_START),
+            weekly([SEPDEC], RULE_START, START + pd.DateOffset(years=1)),
+            weekly([MAIN], pd.Timestamp("2022-01-01"), END),
         ]
     )
     auto = pd.read_csv(AUTO, parse_dates=["date"])
