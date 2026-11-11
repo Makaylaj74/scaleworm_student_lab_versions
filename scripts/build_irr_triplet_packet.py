@@ -8,11 +8,22 @@ annotated blind from scratch, presented grouped by triplet. In the labeler the r
 can flip the view to the other two frames of the triplet with their current boxes
 overlaid (clicking is disabled while viewing a neighbour).
 
-Anchors are clear-era (2021-09..2023-08) counted Monday frames on days never used in
-IRR rounds 2/3, one per calendar month, taken nearest the 10/30/50/70/90th percentiles of
-MJ's Monday count so the set spans low to high density. ``--pick`` walks outward from each
+Clean for EVERY rater incl. MJ: anchors are clear-era (2021-09..2023-08) Tue-Fri
+recordings from the automated v8+SAHI harvest, on days where no recording has ever been
+hand-counted, box-labelled or scene-sorted by anyone (any CAMHD stem under SEEN_SOURCES
+blocks its whole day). Anchor time = the harvest's best_time_s. Density is stratified on
+the harvest's detector count (one per calendar month, nearest the 10/30/50/70/90th
+percentiles); that count is a selection aid only and is never written into a packet or
+printed, so no rater sees a reference number. ``--pick`` walks outward from each
 percentile and keeps the first candidate whose triplet passes QC; the result is frozen in
 ``ANCHORS`` for reproducibility.
+
+Scene-1 needs a human eye: the harvest's auto-picked best_time_s often lands off Scene-1,
+and image matching to a Monday Scene-1 frame can't tell (true Scene-1 a week apart scores
+as low as off-scene views). So ``--scene-sheets`` writes N_PER_QUANTILE contact sheets per
+quantile into SCENE_CHECK for a scene-only yes/no + time pass (MJ, 2026-11-10; no counts
+shown), and ``--pick`` takes, per quantile, the first sheet sorted Scene-1 whose triplet at
+the chosen time passes QC.
 
 OFFSET_S = 10: a probe on 2022-11-07T12:15 showed the camera holds the identical Scene-1
 framing for at least +/-20 s, and the Scene-1 timestamps are ~30 s precise, so +/-10 s
@@ -24,8 +35,10 @@ stays inside the hold. Triplet QC (both re-run on every build):
 
 Usage::
 
-    python scripts/build_irr_triplet_packet.py LG MS
-    python scripts/build_irr_triplet_packet.py --pick      # print the anchor selection
+    python scripts/build_irr_triplet_packet.py --scene-sheets   # 1. candidate sheets
+    #    2. scene-check them in notebooks/41_scene_check_irr_round4.ipynb
+    python scripts/build_irr_triplet_packet.py --pick           # 3. print anchors
+    python scripts/build_irr_triplet_packet.py MJ LG MS         # 4. build packets
 """
 
 from __future__ import annotations
@@ -33,14 +46,17 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import re
 import shutil
 import zipfile
+from datetime import date
 from pathlib import Path
 
 import build_irr_packet as bip
 import matplotlib.image as mpimg
 import numpy as np
-from count_frames import extract_frame
+from count_frames import extract_frame, stem_to_video
+from scene_sampler import build_contact_sheet
 
 ROUND = "round4"
 OUT_DIR = bip.REPO / "validation/irr_round_4"
@@ -48,34 +64,81 @@ FRAME_CACHE = OUT_DIR / "frames"
 OFFSET_S = 10
 MAX_SHIFT_PX = 10.0
 CLEAR_WINDOW = ("2021-09-01", "2023-08-31")
-USED_DAYS = {
-    d for periods in bip.ROUNDS.values() for days in periods.values() for d in days
-}
+HARVEST = bip.REPO / "notebooks/harvest_clear_v8sahi_2021_2023.csv"
+VIDEO_ROOT = Path("/home/jovyan/ooi/san_data/RS03ASHS-PN03B-06-CAMHDA301")
+# Everywhere a human has looked at / annotated recordings (labels, hand-counts, sorts,
+# IRR packets + returns). A stem found here makes its whole day ineligible.
+SEEN_SOURCES = [
+    "validation",
+    "datasets",
+    "scene_sorting",
+    "notebooks/handcount_2023_01.csv",
+    "notebooks/handcount_2024_05.csv",
+    "notebooks/LG_results",
+    "notebooks/irr_packet_LG",
+    "notebooks/MS_results_2",
+]
+# Round-4 working dirs: their stems are this round's own candidates, not prior exposure.
+SCENE_CHECK = bip.REPO / "scene_sorting/irr_round4_scene_check"
+EXEMPT = [OUT_DIR, SCENE_CHECK]
+N_PER_QUANTILE = 4
+STEM_RE = re.compile(r"CAMHDA301-(20\d{6})T\d{6}")
 QUANTILES = (0.1, 0.3, 0.5, 0.7, 0.9)
 MIN_SHARP_RATIO = 0.5
 
-# Output of --pick (2026-11-10); MJ Monday counts 7 / 10 / 13 / 17 / 25.
-ANCHORS = [
-    "CAMHDA301-20230626T031500",
-    "CAMHDA301-20230327T091500",
-    "CAMHDA301-20230821T151500",
-    "CAMHDA301-20220919T211500",
-    "CAMHDA301-20220829T211500",
-]
+# Output of --pick (2026-11-10): (frame_id, scene time s). Never-annotated days.
+ANCHORS: list[tuple[str, int]] = []
 EXTRA_FIELDS = ["triplet_id", "offset_s"]
 
 
-def anchor_candidates(rows: list[dict]) -> list[list[dict]]:
-    """Per count quantile, eligible counted clear-era frames ordered nearest-first."""
+def seen_days(sources: list[str] = SEEN_SOURCES, root: Path = bip.REPO) -> set[str]:
+    """YYYYMMDD of every CAMHD recording any human has annotated/sorted in the repo."""
+    days: set[str] = set()
+    for src in sources:
+        path = root / src
+        files = (
+            [path] if path.is_file() else (p for p in path.rglob("*") if p.is_file())
+        )
+        for f in files:
+            if any(f.is_relative_to(e) for e in EXEMPT):
+                continue
+            days.update(STEM_RE.findall(f.name))
+            if f.suffix in {".csv", ".txt", ".json", ".md"} and f.stat().st_size < 50e6:
+                days.update(STEM_RE.findall(f.read_text(errors="ignore")))
+    return days
+
+
+def harvest_rows(path: Path = HARVEST) -> list[dict]:
+    """Harvest recordings as manifest-shaped rows (+ private ``_density``)."""
+    out = []
+    for r in csv.DictReader(path.open(newline="")):
+        fid = r["frame_id"]
+        out.append(
+            {
+                "frame_id": fid,
+                "datetime_utc": r["datetime_utc"][:19],
+                "scene1_time_s": r["best_time_s"],
+                "video_path": str(stem_to_video(fid, VIDEO_ROOT)),
+                "_density": float(r["count_v8sahi_max"]),
+            }
+        )
+    return out
+
+
+def anchor_candidates(rows: list[dict], excluded_days: set[str]) -> list[list[dict]]:
+    """Per density quantile, eligible never-seen Tue-Fri recordings, nearest-first."""
     lo, hi = CLEAR_WINDOW
-    pool = [
-        r
-        for r in rows
-        if r["frame_status"] == "counted"
-        and lo <= r["datetime_utc"][:10] <= hi
-        and r["frame_id"].split("-")[1][:8] not in USED_DAYS
-    ]
-    pool.sort(key=lambda r: (float(r["worm_count"]), r["frame_id"]))
+    pool = []
+    for r in rows:
+        day = r["frame_id"].split("-")[1][:8]
+        weekday = date(int(day[:4]), int(day[4:6]), int(day[6:])).weekday()
+        if (
+            1 <= weekday <= 4
+            and lo <= r["datetime_utc"][:10] <= hi
+            and day not in excluded_days
+        ):
+            pool.append(r)
+    pool.sort(key=lambda r: (r["_density"], r["frame_id"]))
     out = []
     for q in QUANTILES:
         i = round(q * (len(pool) - 1))
@@ -181,27 +244,76 @@ def qc_rows(rows: list[dict], cache: Path = FRAME_CACHE) -> list[tuple[str, bool
     return out
 
 
-def pick_anchors(
-    rows: list[dict], fieldnames: list[str], max_tries: int = 8
-) -> list[dict]:
-    """Nearest-to-quantile anchors, one per month, whose triplet passes QC."""
-    picked: list[dict] = []
+def scene_candidates(rows: list[dict], excluded_days: set[str]) -> list[dict]:
+    """N_PER_QUANTILE recordings per quantile, nearest-first, distinct months overall."""
     months: set[str] = set()
-    for cands in anchor_candidates(rows):
-        tries = 0
+    out = []
+    for q, cands in enumerate(anchor_candidates(rows, excluded_days)):
+        taken = 0
         for c in cands:
-            month = c["frame_id"].split("-")[1][:6]
+            month = c["frame_id"][10:16]
             if month in months:
                 continue
-            tries += 1
-            [(fid, ok, msg)] = qc_rows(triplet_rows([c], fieldnames))
-            print(f"  {'PASS' if ok else 'fail'} {fid} (MJ {c['worm_count']}): {msg}")
-            if ok:
-                picked.append(c)
-                months.add(month)
+            months.add(month)
+            out.append({**c, "quantile": q})
+            taken += 1
+            if taken == N_PER_QUANTILE:
                 break
-            if tries >= max_tries:
-                raise RuntimeError("no passing triplet near this quantile")
+    return out
+
+
+def build_scene_sheets(cands: list[dict], session: Path = SCENE_CHECK) -> None:
+    """Contact sheets + manifest in the scene_sorter layout (no density written)."""
+    sheets = session / "contact_sheets"
+    sheets.mkdir(parents=True, exist_ok=True)
+    with (session / "manifest.csv").open("w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(
+            ["stem", "datetime_utc", "recording_date", "sheet_path", "video_path"]
+        )
+        for c in cands:
+            w.writerow(
+                [
+                    c["frame_id"],
+                    c["datetime_utc"],
+                    c["datetime_utc"][:10],
+                    f"contact_sheets/{c['frame_id']}.png",
+                    c["video_path"],
+                ]
+            )
+    with (session / "candidates.csv").open("w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["stem", "quantile"])
+        w.writerows((c["frame_id"], c["quantile"]) for c in cands)
+    for c in cands:
+        out = sheets / f"{c['frame_id']}.png"
+        if not out.exists():
+            build_contact_sheet(Path(c["video_path"]), out)
+        print(f"  sheet {c['frame_id']}")
+
+
+def pick_anchors(fieldnames: list[str], session: Path = SCENE_CHECK) -> list[dict]:
+    """Per quantile, the first Scene-1-sorted candidate whose triplet passes QC."""
+    log = {r["stem"]: r for r in csv.DictReader((session / "sort_log.csv").open())}
+    cands = list(csv.DictReader((session / "candidates.csv").open()))
+    picked = []
+    for q in sorted({c["quantile"] for c in cands}, key=int):
+        for c in (c for c in cands if c["quantile"] == q):
+            d = log.get(c["stem"])
+            if d is None or d["decision"] != "scene1":
+                continue
+            a = {
+                "frame_id": c["stem"],
+                "scene1_time_s": d["scene1_time_s"],
+                "video_path": str(stem_to_video(c["stem"], VIDEO_ROOT)),
+            }
+            [(fid, ok, msg)] = qc_rows(triplet_rows([a], fieldnames))
+            print(f"  q{q} {'PASS' if ok else 'fail'} {fid}: {msg}")
+            if ok:
+                picked.append(a)
+                break
+        else:
+            print(f"  q{q}: NO passing Scene-1 candidate")
     return picked
 
 
@@ -350,18 +462,40 @@ def build_packet(
 def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("raters", nargs="*", help="rater ids / initials, e.g. LG MS")
+    ap.add_argument(
+        "--scene-sheets",
+        action="store_true",
+        help="write candidate contact sheets for the scene check",
+    )
     ap.add_argument("--pick", action="store_true", help="print the anchor selection")
     ap.add_argument("--out", type=Path, default=OUT_DIR / "packets")
     args = ap.parse_args(argv)
 
-    manifest = list(csv.DictReader(bip.MANIFEST.open(newline="")))
-    fieldnames = list(manifest[0]) + EXTRA_FIELDS
-    if args.pick:
-        for r in pick_anchors(manifest, fieldnames):
-            print(f'    "{r["frame_id"]}",  # MJ count {r["worm_count"]}')
+    fieldnames = list(csv.DictReader(bip.MANIFEST.open(newline="")).fieldnames)
+    fieldnames += EXTRA_FIELDS
+    excluded = seen_days()
+    if args.scene_sheets:
+        build_scene_sheets(scene_candidates(harvest_rows(), excluded))
         return
-    by_id = {r["frame_id"]: r for r in manifest}
-    rows = triplet_rows([by_id[a] for a in ANCHORS], fieldnames)
+    if args.pick:
+        for r in pick_anchors(fieldnames):
+            print(f'    ("{r["frame_id"]}", {r["scene1_time_s"]}),')
+        return
+    if not ANCHORS:
+        raise SystemExit("ANCHORS is empty: run --scene-sheets, scene-check, --pick first")
+    leaked = [a for a, _ in ANCHORS if a.split("-")[1][:8] in excluded]
+    if leaked:
+        raise RuntimeError(f"anchors on already-annotated days: {leaked}")
+    anchors = [
+        {
+            "frame_id": a,
+            "datetime_utc": f"{a[10:14]}-{a[14:16]}-{a[16:18]}T{a[19:21]}:{a[21:23]}:{a[23:25]}",
+            "scene1_time_s": str(t),
+            "video_path": str(stem_to_video(a, VIDEO_ROOT)),
+        }
+        for a, t in ANCHORS
+    ]
+    rows = triplet_rows(anchors, fieldnames)
     print(
         f"IRR {ROUND}: {len(ANCHORS)} triplets x 3 = {len(rows)} frames "
         f"(offset +/-{OFFSET_S} s)"

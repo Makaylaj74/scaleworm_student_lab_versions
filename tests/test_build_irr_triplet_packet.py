@@ -136,3 +136,33 @@ def test_build_packet_end_to_end(tmp_path):
     json.loads((pkt / "labeler.ipynb").read_text())
     with zipfile.ZipFile(zp) as zf:
         assert "irr_packet_MS_round4/irr_manifest.csv" in zf.namelist()
+
+
+def test_seen_days_scans_names_and_text_but_skips_exempt(tmp_path, monkeypatch):
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "CAMHDA301-20220101T001500.png").write_text("")
+    (tmp_path / "a" / "log.csv").write_text("x,CAMHDA301-20220202T031500\n")
+    (tmp_path / "own").mkdir()
+    (tmp_path / "own" / "CAMHDA301-20220303T001500.png").write_text("")
+    monkeypatch.setattr(bt, "EXEMPT", [tmp_path / "own"])
+    assert bt.seen_days(["a", "own"], root=tmp_path) == {"20220101", "20220202"}
+
+
+def test_anchor_candidates_weekday_window_unseen_only():
+    def h(fid, dens):
+        d = fid[10:18]
+        return {
+            "frame_id": fid,
+            "datetime_utc": f"{d[:4]}-{d[4:6]}-{d[6:]}T00:15:00",
+            "_density": dens,
+        }
+
+    rows = [
+        h("CAMHDA301-20220103T001500", 1),  # Monday -> out
+        h("CAMHDA301-20220104T001500", 2),  # Tuesday, seen day -> out
+        h("CAMHDA301-20220105T001500", 3),  # Wednesday -> in
+        h("CAMHDA301-20220108T001500", 4),  # Saturday -> out
+        h("CAMHDA301-20240105T001500", 5),  # outside clear window -> out
+    ]
+    cands = bt.anchor_candidates(rows, excluded_days={"20220104"})
+    assert {c["frame_id"] for q in cands for c in q} == {"CAMHDA301-20220105T001500"}
