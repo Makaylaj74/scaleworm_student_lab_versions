@@ -39,6 +39,17 @@ Any frame sharing a **calendar day** with a validation frame is removed from tra
 ### 2.4 Annotation reliability (inter-rater, in progress)
 A second rater (Rater B) independently box-counted a 20-frame packet: tracks the pattern (Pearson r = 0.74) but counts systematically fewer worms (≈9.5 vs 16.2/frame; ICC 0.38). That interim comparison is **confounded** (reference labels were detector-seeded then corrected, vs. counted-from-blank), so a clean blind 3-way round (Makayla / Rater B / Rater C, all from-scratch on the same fresh frames) is underway. Relevance to the method: human–human disagreement is ~2× at high density, which sets a ground-truth ceiling the detector cannot beat on dense frames (see §6).
 
+### 2.5 Written counting rule and blind recounts (Nov 2026)
+Re-running fresh pre-labels against finished counts showed the box-correction criterion had drifted between sessions. In the most extreme case, on the same Sep–Dec 2021 Mondays, a pass that boxed empty dark openings read **2.35×** a pass that did not. A **written counting rule** (`notebooks/worm_counting_rule.md`, confirmed 2026-11-11) now governs every manual count. It boxes each separable worm body, and a dark opening counts only if part of a worm body is visible inside it. All 2021 counts were redone **blind** (fresh pre-labels, annotation columns blanked) under this rule:
+
+| Set | Frames | Result (bootstrap n = 10 000, seed 0, percentile CIs) |
+|---|---|---|
+| Sep–Dec 2021 recount vs Sep 2026 originals | 48 | originals were low by 1.24× [1.16, 1.33] (one earlier session) |
+| 2022–2024 stratified recount vs originals | 24 | 0.95× [0.77, 1.19]: originals **validated**, kept |
+| Jan–Aug 2021 recount (rule) vs earlier broad-criterion pass | 43 | rule / broad = 0.70× [0.65, 0.76]: broad pass **replaced** |
+
+Under the rule, Jan–Aug 2021 averages **19.8 worms/frame [17.0, 22.9]** and Sep–Dec 2021 averages **13.2 [12.0, 14.4]**. These intervals come from a cluster bootstrap over Mondays. There is therefore **no early-2021 low**: the low early-2021 values in the automated series were a pipeline artifact (§5, §6.3). *Caveat:* the two 2021 blocks were counted in separate sittings, so between-session drift cannot be fully excluded; a shuffled blind Jul-vs-Oct/Nov check would settle it.
+
 ---
 
 ## 3. Detector
@@ -78,6 +89,19 @@ Detection quality is scored by **point-match** recall / precision (greedy center
 - **Manual scene-sort (settled):** a human picks the Scene-1 frame; used for the Monday training/validation series. Reliable but does not scale to ~20k recordings.
 - **Learned scene classifier (abandoned):** failed its agreement gate twice (κ = −0.42, then 0.231); not used to auto-sort the archive.
 - **Detector-driven frame-finder (scalable):** scan the pan (~120–600 s), run the detector on sampled frames, take the richest frame as the implicit Scene-1 pick. Works in the clear window (~90% within 120 s of manual) but fails on blurry footage (~25–61% wrong frame), because there the detector itself is unreliable — frame-finding and counting fail together off the clear window.
+- **Era-fixed Scene-1 time (density head; Nov 2026, in validation):** the camera reaches Scene-1 at a **fixed point in the pan within each camera-schedule era**. Per the Monday sort, that point is 420 s before 2021-09-01, 540 s until 2022-04-25 and 210 s after; Jan–May 2023 alternates between 210 s and 420 s, so the higher of the two readings is taken. The density head (§ `methods_density_head.md`) reads a single frame at that time, and recordings reading below **8.5 worms** are treated as off-scene. That cutoff was chosen on Monday sort labels only. Validation:
+  - *Monday hand counts under the rule* (91 frames, 2021):
+    - The new reading gives r = 0.80 [0.69, 0.87]; the detector-picked frame gives 0.40 [0.17, 0.57]. Reading the human-selected frame directly gives 0.81, so the new method matches that ceiling.
+    - The ratio to hand counts is **0.82× in Jan–Aug and 0.86× in Sep–Dec**. The old frames gave 0.72× and 1.29×, so the new method removes the period-dependent bias.
+    - These era times were derived from the same Mondays, so this check is not independent.
+  - *Independent Tuesday check* (rules fixed from Mondays):
+    - The era times match the Tuesday scene sort for 94% of 519 Scene-1 slots.
+    - The off-scene cutoff transfers with sensitivity 0.90 and specificity 0.83 (686 slots).
+    - Against 229 Tuesday box counts, which are dense (mean 31.5/frame), r improves from 0.56 to **0.64** (paired Δr +0.08 [0.01, 0.15]).
+    - Day-level r improves from 0.42 to 0.58 (49 days; Δr +0.16 [−0.07, 0.40]).
+    - The count ratio there is 0.67×, which is the density ceiling on dense 2022 Tuesdays rather than frame choice.
+  - The Tuesday sort begins Sep 2021, so Jan–Aug 2021 is validated on Mondays only.
+  - *Provenance:* `scripts/era_finder_*.py` (density reads) and `scripts/era_finder_score.py` (every number above). Outputs are in `validation/era_time_finder/`.
 
 ---
 
@@ -88,8 +112,9 @@ Detection quality is scored by **point-match** recall / precision (greedy center
 **6.2 The density ceiling (the unifying result).** Dense scenes resist every remedy tried — more labels, pseudo-labels, higher-resolution inference, inference-SAHI, tile-training (v8), and all three v7 recipes. Clear/low-density → reliable (~70%+ point-recall, ~100% count); dense/blurry → ~25–35%. A within-frame diagnosis showed the missed worms are small and closely-spaced but *separable* (not occluded) — the small-object regime tiling targets — yet tiling lifted dense recall only +1–3 points. The ceiling is partly ground-truth-limited (humans disagree ~2× at high density). **Consequence:** the automated series is a conservative, shape-preserving **relative index**; peak *magnitudes* are anchored to the non-saturating manual Monday series, not the automated count.
 
 **6.3 Frame-finding, not counting, is the archive bottleneck.** A better counter (v8+SAHI) did not move the automated archive index: on auto-picked frames both v5 and v8 land at ~58% of manual because the *picked frame* isn't the true Scene-1. The fix was **aggregation** — counting the **max over a 60 s temporal grid** — which lifted the clear-window index from ~58% → ~100% of manual abundance and resolved the 2021 undercount. The full clear window (3,989 recordings) was re-harvested with this recipe.
+*Update (Nov 2026):* the "~100%" and "resolved" claims were judged against inadequate 2021 truth. The comparison rested on 4 dense clicked frames and on broad-criterion counts that were later found inflated. Against the rule-based 2021 recount (§2.5), the density-head index built on these harvest frames still reads Jan–Aug 2021 at **0.38–0.51×** of hand counts by quarter. From Sep 2021 to Aug 2023 it matches hand counts: 1.01× [0.94, 1.08], weekly r = 0.61 [0.41, 0.77], n = 87 weeks, though the dense late-2022 peak reads 0.76×. Diagnosis: the counter is fine on correct frames (0.83–0.86× in both periods). The failure lies in selecting recordings and frames: in Jan–Aug 2021, 37–66% of recordings per month contain no Scene-1, and the max-over-grid pick misses the brief Scene-1 window. The era-fixed Scene-1 time (§5) is the proposed fix.
 
-**6.4 Provisional eras.** Trustworthy: clear window, 2022–2023. Provisional (under-counts): 2021 (~2× low — density + an independent frame-finder failure in that era) and blurry post-Aug-2023 / 2024. Dense early-recovery 2015–2016 is out-of-distribution and awaits an advisor decision on the count metric (worm count vs. percent cover).
+**6.4 Provisional eras.** Trustworthy automated index: Sep 2021–Aug 2023 (validated against hand counts, §6.3). Manual counts under the rule cover all of 2021–Aug 2023. Provisional automated index: Jan–Aug 2021 (~0.4–0.5× low from recording/frame selection, pending the era-fixed rebuild) and blurry post-Aug-2023 / 2024. Dense early-recovery 2015–2016 is out-of-distribution and awaits an advisor decision on the count metric (worm count vs. percent cover).
 
 ---
 
@@ -98,12 +123,12 @@ Detection quality is scored by **point-match** recall / precision (greedy center
 Because the production model is the largest scale (YOLO26-**x**, ~59 M params), a sweep tested whether a **smaller/faster** scale holds detection quality (relevant to the ~13k-record harvest cost): yolo26 **n / s / m / l / x**, each COCO-pretrained, fine-tuned on the same 421/87 clear-safe set with identical hyperparameters (1280 px, 100 epochs, seed 0).
 
 - **Validation mAP is ~flat across scale** (mAP50-95 0.411–0.440; 10 M `s` ≈ 59 M `x`).
-- **Under the point-match gate, the smaller `s` *beats* `x`** by ~6 recall points on both clear (75.5 vs 69.5%) and dense (64.6 vs 58.5%) — consistent with the 59 M model *overfitting* the 421-image training set — and `s`-plain nearly matches the full v8+SAHI pipeline without tiling.
+- **Detection quality is flat across scale under the point-match gate, confirmed by seed replication.** A single-seed run initially suggested `s` beat `x` by ~6 recall points, but replicating each scale at 3 seeds showed this was seed variance: clear39 `s` 71.0 ± 3.6% vs `x` 70.0 ± 2.5% (gap +1.0%, combined sd 6.0%); dense_clear `s` 60.2 ± 3.1% vs `x` 58.9 ± 0.6% (gap +1.3%, combined sd 3.7%). Both gaps are **within noise** — the 10 M `s` *matches* (does not beat) the 59 M `x`. (`x` is notably more seed-stable on dense, ±0.6%.)
 - **Speed on the H100 is scale-insensitive** (~15–16 img/s all scales); the detector is not the harvest throughput bottleneck.
-- **Status:** a seed replication (s and x at 3 seeds each) is running to confirm the `s` > `x` gap exceeds seed variance before any production-scale change is recommended. *[update verdict here when the replication completes]*
+- **Conclusion:** scale is a wash on current hardware — no quality gain from the larger model, no throughput gain from the smaller. `s` is a defensible efficiency choice (1/6 the parameters, equal quality) if the pipeline ever becomes compute-bound; otherwise the production `x` is equally valid. *Methodological note: the single-seed result was overturned by replication — reinforcing that scale comparisons require multiple seeds.*
 
 ---
 
 ## 8. One-paragraph abstract of the method
 
-A YOLO26-x object detector was fine-tuned on ~973 hand-box-labeled Scene-1 frames (17,287 worms) and validated against independent human click-counts held out at the calendar-day level. The production model counts clear, low-to-moderate-density footage at ~70% point-recall with near-unbiased totals, but systematically under-counts dense and blurry scenes (~25–35%) — a density ceiling that resisted every remedy (more labels, pseudo-labels, higher-resolution and tiled/SAHI inference, and multiple retrain recipes) and is partly limited by ~2× human disagreement at high density. Scene selection is manual where it anchors the series and automated (a detector-driven frame-finder with max-over-grid aggregation) for the archive, reproducing manual abundance to ~100% in the clear 2021–2023 window. The resulting weekday index is a conservative relative abundance measure — trustworthy in the clear window, provisional in dense/blurry eras — with peak magnitudes anchored to the manual series.
+A YOLO26-x object detector was fine-tuned on ~973 hand-box-labeled Scene-1 frames (17,287 worms) and validated against independent human click-counts held out at the calendar-day level. The production model counts clear, low-to-moderate-density footage at ~70% point-recall with near-unbiased totals, but systematically under-counts dense and blurry scenes (~25–35%) — a density ceiling that resisted every remedy (more labels, pseudo-labels, higher-resolution and tiled/SAHI inference, and multiple retrain recipes) and is partly limited by ~2× human disagreement at high density. Scene selection is manual where it anchors the series and automated (a detector-driven frame-finder with max-over-grid aggregation) for the archive, reproducing manual abundance (1.01×) from Sep 2021 to Aug 2023. All manual counts follow a written counting rule, and the 2021 counts were redone blind under it. That recount showed early 2021 was not low (19.8 vs 13.2 worms/frame in late 2021). It also showed the archive frame-finder still under-reads Jan–Aug 2021, a recording/frame-selection failure rather than a counting one. Reading the density head at each camera-schedule era's fixed Scene-1 time removes the period-dependent bias on Mondays and modestly improves agreement on independent Tuesdays. The resulting weekday index is a conservative relative abundance measure: trustworthy from Sep 2021 to Aug 2023, provisional in early 2021 and in dense/blurry eras, with peak magnitudes anchored to the manual series.

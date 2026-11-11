@@ -70,6 +70,7 @@ In the dense OOD regime the fine-tuned density head still under-counts (0.61) an
 - **The dense regime is still under-counted and noisy** (OOD ratio 0.61, r≈0.60). Fine-tuning softened the ceiling; it did not eliminate it.
 - **Ground truth itself is ~2× uncertain.** Inter-rater reliability work shows human counters disagree by up to ~2× on dense frames, which caps the achievable accuracy of *any* count-based method and widens the OOD confidence intervals (ratio 0.61 CI 0.57–0.66, but r CI 0.26–0.80 on n=35).
 - **Two models, two scales.** Cross-era *magnitude* comparisons (e.g. "2015 recovered to X% of 2023") cross a model seam and are the fragile claim; within-era *trends and timing* are robust.
+- **Only as good as the frame it is given.** On the human-selected Scene-1 frames of 2021 it reads 0.83–0.86× hand counts (r = 0.81). On archive frames picked by the detector's max-over-grid it reads 0.38–0.51× in Jan–Aug 2021, because many recordings lack Scene-1 and the brief Scene-1 window is missed. Frame selection, not the counter, is the binding limit for the archive index (see `method_writeup_detector_2026_10_14.md` §5, §6.3).
 - **No individual identities.** The method yields a count/abundance surface, not per-worm tracks — unsuitable for growth/turnover of individuals.
 - **Small OOD calibration set** (n=35 for 2015–16); the dense ratio rests on relatively few anchor frames.
 
