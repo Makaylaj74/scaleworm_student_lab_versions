@@ -89,7 +89,13 @@ QUANTILES = (0.1, 0.3, 0.5, 0.7, 0.9)
 MIN_SHARP_RATIO = 0.5
 
 # Output of --pick (2026-11-10): (frame_id, scene time s). Never-annotated days.
-ANCHORS: list[tuple[str, int]] = []
+ANCHORS: list[tuple[str, int]] = [
+    ("CAMHDA301-20230713T181500", 210),
+    ("CAMHDA301-20211028T181500", 530),
+    ("CAMHDA301-20220325T181500", 530),
+    ("CAMHDA301-20221209T001500", 210),
+    ("CAMHDA301-20220826T121500", 200),
+]
 EXTRA_FIELDS = ["triplet_id", "offset_s"]
 
 
